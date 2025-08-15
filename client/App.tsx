@@ -70,18 +70,12 @@ function AdminRoutes() {
       } />
       <Route path="/locations" element={
         <ProtectedAdminRoute>
-          <div className="p-6">
-            <h1 className="text-3xl font-bold">Location Management</h1>
-            <p className="text-gray-600 mt-2">Location management features coming soon...</p>
-          </div>
+          <AdminLocations />
         </ProtectedAdminRoute>
       } />
       <Route path="/bookings" element={
         <ProtectedAdminRoute>
-          <div className="p-6">
-            <h1 className="text-3xl font-bold">Booking Management</h1>
-            <p className="text-gray-600 mt-2">Booking management features coming soon...</p>
-          </div>
+          <AdminBookings />
         </ProtectedAdminRoute>
       } />
       <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
