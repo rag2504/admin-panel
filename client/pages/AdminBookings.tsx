@@ -355,18 +355,18 @@ export default function AdminBookings() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
                         <div className="space-y-1">
                           <div><strong>User:</strong> {booking.userId?.name || 'Admin Booking'}</div>
-                          <div><strong>Contact:</strong> {booking.playerDetails.contactPerson.name} ({booking.playerDetails.contactPerson.phone})</div>
-                          <div><strong>Players:</strong> {booking.playerDetails.playerCount}</div>
-                          {booking.playerDetails.teamName && (
+                          <div><strong>Contact:</strong> {booking.playerDetails?.contactPerson?.name || 'N/A'} ({booking.playerDetails?.contactPerson?.phone || 'N/A'})</div>
+                          <div><strong>Players:</strong> {booking.playerDetails?.playerCount || 0}</div>
+                          {booking.playerDetails?.teamName && (
                             <div><strong>Team:</strong> {booking.playerDetails.teamName}</div>
                           )}
                         </div>
-                        
+
                         <div className="space-y-1">
-                          <div><strong>Ground:</strong> {booking.groundId.name}</div>
-                          <div><strong>Location:</strong> {booking.groundId.location.cityName}, {booking.groundId.location.state}</div>
+                          <div><strong>Ground:</strong> {booking.groundId?.name || 'Unknown Ground'}</div>
+                          <div><strong>Location:</strong> {booking.groundId?.location?.cityName || 'Unknown'}, {booking.groundId?.location?.state || 'Unknown'}</div>
                           <div><strong>Date:</strong> {formatDate(booking.bookingDate)}</div>
-                          <div><strong>Time:</strong> {formatTime(booking.timeSlot.startTime)} - {formatTime(booking.timeSlot.endTime)}</div>
+                          <div><strong>Time:</strong> {formatTime(booking.timeSlot?.startTime)} - {formatTime(booking.timeSlot?.endTime)}</div>
                         </div>
                       </div>
 
