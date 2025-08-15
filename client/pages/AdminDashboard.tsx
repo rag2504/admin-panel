@@ -1,17 +1,23 @@
-import { useEffect, useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { useApi } from '@/hooks/useApi';
-import { 
-  Users, 
-  MapPin, 
-  Calendar, 
-  IndianRupee, 
-  TrendingUp, 
+import { useEffect, useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { useApi } from "@/hooks/useApi";
+import {
+  Users,
+  MapPin,
+  Calendar,
+  IndianRupee,
+  TrendingUp,
   Clock,
   CheckCircle,
-  AlertCircle
-} from 'lucide-react';
+  AlertCircle,
+} from "lucide-react";
 
 interface DashboardStats {
   totalUsers: number;
@@ -37,28 +43,28 @@ export default function AdminDashboard() {
   const loadStats = async () => {
     setLoading(true);
     try {
-      const response = await get('/admin/stats');
+      const response = await get("/admin/stats");
       if (response.success) {
         setStats(response.data.stats);
       }
     } catch (error) {
-      console.error('Failed to load stats:', error);
+      console.error("Failed to load stats:", error);
     } finally {
       setLoading(false);
     }
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR'
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
     }).format(amount);
   };
 
   const formatDate = (date: string) => {
-    return new Intl.DateTimeFormat('en-IN', {
-      dateStyle: 'medium',
-      timeStyle: 'short'
+    return new Intl.DateTimeFormat("en-IN", {
+      dateStyle: "medium",
+      timeStyle: "short",
     }).format(new Date(date));
   };
 
@@ -120,7 +126,9 @@ export default function AdminDashboard() {
           <CardContent className="p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-green-100 text-sm font-medium">Active Users</p>
+                <p className="text-green-100 text-sm font-medium">
+                  Active Users
+                </p>
                 <p className="text-3xl font-bold">{stats.activeUsers}</p>
               </div>
               <CheckCircle className="h-8 w-8 text-green-200" />
@@ -132,7 +140,9 @@ export default function AdminDashboard() {
           <CardContent className="p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-purple-100 text-sm font-medium">Total Grounds</p>
+                <p className="text-purple-100 text-sm font-medium">
+                  Total Grounds
+                </p>
                 <p className="text-3xl font-bold">{stats.totalGrounds}</p>
               </div>
               <MapPin className="h-8 w-8 text-purple-200" />
@@ -144,7 +154,9 @@ export default function AdminDashboard() {
           <CardContent className="p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-orange-100 text-sm font-medium">Total Bookings</p>
+                <p className="text-orange-100 text-sm font-medium">
+                  Total Bookings
+                </p>
                 <p className="text-3xl font-bold">{stats.totalBookings}</p>
               </div>
               <Calendar className="h-8 w-8 text-orange-200" />
@@ -157,8 +169,12 @@ export default function AdminDashboard() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm font-medium">Pending Bookings</p>
-                <p className="text-3xl font-bold text-yellow-600">{stats.pendingBookings}</p>
+                <p className="text-gray-600 text-sm font-medium">
+                  Pending Bookings
+                </p>
+                <p className="text-3xl font-bold text-yellow-600">
+                  {stats.pendingBookings}
+                </p>
               </div>
               <Clock className="h-8 w-8 text-yellow-600" />
             </div>
@@ -169,8 +185,12 @@ export default function AdminDashboard() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm font-medium">Confirmed Bookings</p>
-                <p className="text-3xl font-bold text-green-600">{stats.confirmedBookings}</p>
+                <p className="text-gray-600 text-sm font-medium">
+                  Confirmed Bookings
+                </p>
+                <p className="text-3xl font-bold text-green-600">
+                  {stats.confirmedBookings}
+                </p>
               </div>
               <CheckCircle className="h-8 w-8 text-green-600" />
             </div>
@@ -182,8 +202,12 @@ export default function AdminDashboard() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-emerald-100 text-sm font-medium">Total Revenue</p>
-                <p className="text-2xl font-bold">{formatCurrency(stats.totalRevenue)}</p>
+                <p className="text-emerald-100 text-sm font-medium">
+                  Total Revenue
+                </p>
+                <p className="text-2xl font-bold">
+                  {formatCurrency(stats.totalRevenue)}
+                </p>
               </div>
               <IndianRupee className="h-8 w-8 text-emerald-200" />
             </div>
@@ -194,8 +218,12 @@ export default function AdminDashboard() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-teal-100 text-sm font-medium">Monthly Revenue</p>
-                <p className="text-2xl font-bold">{formatCurrency(stats.monthlyRevenue)}</p>
+                <p className="text-teal-100 text-sm font-medium">
+                  Monthly Revenue
+                </p>
+                <p className="text-2xl font-bold">
+                  {formatCurrency(stats.monthlyRevenue)}
+                </p>
               </div>
               <TrendingUp className="h-8 w-8 text-teal-200" />
             </div>
@@ -207,29 +235,35 @@ export default function AdminDashboard() {
       <Card>
         <CardHeader>
           <CardTitle>Recent Bookings</CardTitle>
-          <CardDescription>
-            Latest 5 bookings in the system
-          </CardDescription>
+          <CardDescription>Latest 5 bookings in the system</CardDescription>
         </CardHeader>
         <CardContent>
           {stats.recentBookings.length > 0 ? (
             <div className="space-y-4">
               {stats.recentBookings.map((booking, index) => (
-                <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+                >
                   <div className="flex-1">
                     <div className="flex items-center gap-3">
                       <div className="font-medium text-gray-900">
                         {booking.bookingId}
                       </div>
-                      <Badge 
-                        variant={booking.status === 'confirmed' ? 'default' : 'secondary'}
+                      <Badge
+                        variant={
+                          booking.status === "confirmed"
+                            ? "default"
+                            : "secondary"
+                        }
                         className="text-xs"
                       >
                         {booking.status}
                       </Badge>
                     </div>
                     <div className="text-sm text-gray-600 mt-1">
-                      {booking.userId?.name || 'Admin Booking'} • {booking.groundId?.name}
+                      {booking.userId?.name || "Admin Booking"} •{" "}
+                      {booking.groundId?.name}
                     </div>
                     <div className="text-xs text-gray-500">
                       {formatDate(booking.createdAt)}
@@ -261,7 +295,9 @@ export default function AdminDashboard() {
           <CardContent className="p-6 text-center">
             <Users className="h-12 w-12 text-blue-600 mx-auto mb-4" />
             <h3 className="font-semibold text-gray-900 mb-2">Manage Users</h3>
-            <p className="text-sm text-gray-600">View and manage user accounts</p>
+            <p className="text-sm text-gray-600">
+              View and manage user accounts
+            </p>
           </CardContent>
         </Card>
 
@@ -269,14 +305,18 @@ export default function AdminDashboard() {
           <CardContent className="p-6 text-center">
             <MapPin className="h-12 w-12 text-green-600 mx-auto mb-4" />
             <h3 className="font-semibold text-gray-900 mb-2">Manage Grounds</h3>
-            <p className="text-sm text-gray-600">Add and edit cricket grounds</p>
+            <p className="text-sm text-gray-600">
+              Add and edit cricket grounds
+            </p>
           </CardContent>
         </Card>
 
         <Card className="hover:shadow-lg transition-shadow cursor-pointer">
           <CardContent className="p-6 text-center">
             <IndianRupee className="h-12 w-12 text-purple-600 mx-auto mb-4" />
-            <h3 className="font-semibold text-gray-900 mb-2">Financial Reports</h3>
+            <h3 className="font-semibold text-gray-900 mb-2">
+              Financial Reports
+            </h3>
             <p className="text-sm text-gray-600">View revenue and payments</p>
           </CardContent>
         </Card>

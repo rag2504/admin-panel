@@ -1,23 +1,35 @@
-import { useEffect, useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useApi } from '@/hooks/useApi';
-import { 
-  Calendar, 
-  Plus, 
-  Edit, 
-  Trash2, 
+import { useEffect, useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useApi } from "@/hooks/useApi";
+import {
+  Calendar,
+  Plus,
+  Edit,
+  Trash2,
   RefreshCw,
   Search,
   Clock,
   CheckCircle,
   XCircle,
   Eye,
-  IndianRupee
-} from 'lucide-react';
+  IndianRupee,
+} from "lucide-react";
 
 interface Booking {
   _id: string;
@@ -58,9 +70,9 @@ interface Booking {
     convenienceFee: number;
     totalAmount: number;
   };
-  status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
+  status: "pending" | "confirmed" | "cancelled" | "completed";
   payment: {
-    status: 'pending' | 'completed' | 'failed' | 'refunded';
+    status: "pending" | "completed" | "failed" | "refunded";
     method?: string;
     transactionId?: string;
     paymentDate?: string;
@@ -73,9 +85,9 @@ export default function AdminBookings() {
   const [filteredBookings, setFilteredBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [paymentFilter, setPaymentFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [paymentFilter, setPaymentFilter] = useState("all");
   const { get, patch, delete: del } = useApi();
 
   useEffect(() => {
@@ -90,17 +102,17 @@ export default function AdminBookings() {
     setLoading(true);
     setError(null);
     try {
-      const response = await get('/admin/bookings');
+      const response = await get("/admin/bookings");
       if (response.success) {
         setBookings(response.data.bookings || []);
         setError(null);
       } else {
-        setError(response.error || 'Failed to load bookings');
+        setError(response.error || "Failed to load bookings");
         setBookings([]);
       }
     } catch (error) {
-      console.error('Failed to load bookings:', error);
-      setError('Network error: Unable to connect to server');
+      console.error("Failed to load bookings:", error);
+      setError("Network error: Unable to connect to server");
       setBookings([]);
     } finally {
       setLoading(false);
@@ -111,20 +123,29 @@ export default function AdminBookings() {
     let filtered = bookings;
 
     if (searchTerm) {
-      filtered = filtered.filter(booking =>
-        booking.bookingId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        booking.userId?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        booking.groundId?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        booking.playerDetails?.contactPerson?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+      filtered = filtered.filter(
+        (booking) =>
+          booking.bookingId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          booking.userId?.name
+            ?.toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          booking.groundId?.name
+            ?.toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          booking.playerDetails?.contactPerson?.name
+            ?.toLowerCase()
+            .includes(searchTerm.toLowerCase()),
       );
     }
 
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter(booking => booking.status === statusFilter);
+    if (statusFilter !== "all") {
+      filtered = filtered.filter((booking) => booking.status === statusFilter);
     }
 
-    if (paymentFilter !== 'all') {
-      filtered = filtered.filter(booking => booking.payment?.status === paymentFilter);
+    if (paymentFilter !== "all") {
+      filtered = filtered.filter(
+        (booking) => booking.payment?.status === paymentFilter,
+      );
     }
 
     setFilteredBookings(filtered);
@@ -137,66 +158,66 @@ export default function AdminBookings() {
         loadBookings();
       }
     } catch (error) {
-      console.error('Failed to update booking status:', error);
+      console.error("Failed to update booking status:", error);
     }
   };
 
   const deleteBooking = async (bookingId: string) => {
-    if (!confirm('Are you sure you want to delete this booking?')) return;
-    
+    if (!confirm("Are you sure you want to delete this booking?")) return;
+
     try {
       const response = await del(`/admin/bookings/${bookingId}`);
       if (response.success) {
         loadBookings();
       }
     } catch (error) {
-      console.error('Failed to delete booking:', error);
+      console.error("Failed to delete booking:", error);
     }
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      minimumFractionDigits: 0
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      minimumFractionDigits: 0,
     }).format(amount);
   };
 
   const formatDate = (date?: string) => {
-    if (!date) return 'N/A';
+    if (!date) return "N/A";
     try {
-      return new Intl.DateTimeFormat('en-IN', {
-        dateStyle: 'medium'
+      return new Intl.DateTimeFormat("en-IN", {
+        dateStyle: "medium",
       }).format(new Date(date));
     } catch (error) {
-      console.error('Error formatting date:', date, error);
+      console.error("Error formatting date:", date, error);
       return date;
     }
   };
 
   const formatTime = (time?: string) => {
-    if (!time) return 'N/A';
+    if (!time) return "N/A";
     try {
-      return new Intl.DateTimeFormat('en-IN', {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true
+      return new Intl.DateTimeFormat("en-IN", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
       }).format(new Date(`2000-01-01 ${time}`));
     } catch (error) {
-      console.error('Error formatting time:', time, error);
+      console.error("Error formatting time:", time, error);
       return time;
     }
   };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'confirmed':
+      case "confirmed":
         return <Badge className="bg-green-100 text-green-800">Confirmed</Badge>;
-      case 'pending':
+      case "pending":
         return <Badge className="bg-yellow-100 text-yellow-800">Pending</Badge>;
-      case 'cancelled':
+      case "cancelled":
         return <Badge className="bg-red-100 text-red-800">Cancelled</Badge>;
-      case 'completed':
+      case "completed":
         return <Badge className="bg-blue-100 text-blue-800">Completed</Badge>;
       default:
         return <Badge variant="secondary">{status}</Badge>;
@@ -205,14 +226,16 @@ export default function AdminBookings() {
 
   const getPaymentBadge = (status: string) => {
     switch (status) {
-      case 'completed':
+      case "completed":
         return <Badge className="bg-green-100 text-green-800">Paid</Badge>;
-      case 'pending':
+      case "pending":
         return <Badge className="bg-yellow-100 text-yellow-800">Pending</Badge>;
-      case 'failed':
+      case "failed":
         return <Badge className="bg-red-100 text-red-800">Failed</Badge>;
-      case 'refunded':
-        return <Badge className="bg-purple-100 text-purple-800">Refunded</Badge>;
+      case "refunded":
+        return (
+          <Badge className="bg-purple-100 text-purple-800">Refunded</Badge>
+        );
       default:
         return <Badge variant="secondary">{status}</Badge>;
     }
@@ -222,8 +245,12 @@ export default function AdminBookings() {
     <div className="p-4 md:p-6 space-y-4 md:space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Booking Management</h1>
-          <p className="text-gray-600 mt-1">Manage cricket ground bookings and reservations</p>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Booking Management
+          </h1>
+          <p className="text-gray-600 mt-1">
+            Manage cricket ground bookings and reservations
+          </p>
         </div>
         <div className="flex items-center gap-3">
           <Button onClick={loadBookings} variant="outline" size="sm">
@@ -239,8 +266,12 @@ export default function AdminBookings() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm font-medium">Total Bookings</p>
-                <p className="text-3xl font-bold text-blue-600">{bookings.length}</p>
+                <p className="text-gray-600 text-sm font-medium">
+                  Total Bookings
+                </p>
+                <p className="text-3xl font-bold text-blue-600">
+                  {bookings.length}
+                </p>
               </div>
               <Calendar className="h-8 w-8 text-blue-600" />
             </div>
@@ -253,7 +284,7 @@ export default function AdminBookings() {
               <div>
                 <p className="text-gray-600 text-sm font-medium">Pending</p>
                 <p className="text-3xl font-bold text-yellow-600">
-                  {bookings.filter(b => b.status === 'pending').length}
+                  {bookings.filter((b) => b.status === "pending").length}
                 </p>
               </div>
               <Clock className="h-8 w-8 text-yellow-600" />
@@ -267,7 +298,7 @@ export default function AdminBookings() {
               <div>
                 <p className="text-gray-600 text-sm font-medium">Confirmed</p>
                 <p className="text-3xl font-bold text-green-600">
-                  {bookings.filter(b => b.status === 'confirmed').length}
+                  {bookings.filter((b) => b.status === "confirmed").length}
                 </p>
               </div>
               <CheckCircle className="h-8 w-8 text-green-600" />
@@ -279,12 +310,17 @@ export default function AdminBookings() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm font-medium">Total Revenue</p>
+                <p className="text-gray-600 text-sm font-medium">
+                  Total Revenue
+                </p>
                 <p className="text-2xl font-bold text-emerald-600">
                   {formatCurrency(
                     bookings
-                      .filter(b => b.payment?.status === 'completed')
-                      .reduce((sum, b) => sum + (b.pricing?.totalAmount || 0), 0)
+                      .filter((b) => b.payment?.status === "completed")
+                      .reduce(
+                        (sum, b) => sum + (b.pricing?.totalAmount || 0),
+                        0,
+                      ),
                   )}
                 </p>
               </div>
@@ -345,16 +381,18 @@ export default function AdminBookings() {
         <CardHeader>
           <CardTitle>All Bookings ({filteredBookings.length})</CardTitle>
           <CardDescription>
-            {filteredBookings.length !== bookings.length && 
-              `Showing ${filteredBookings.length} of ${bookings.length} bookings`
-            }
+            {filteredBookings.length !== bookings.length &&
+              `Showing ${filteredBookings.length} of ${bookings.length} bookings`}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (
             <div className="space-y-4">
               {[...Array(5)].map((_, i) => (
-                <div key={i} className="p-4 bg-gray-50 rounded-lg animate-pulse">
+                <div
+                  key={i}
+                  className="p-4 bg-gray-50 rounded-lg animate-pulse"
+                >
                   <div className="h-6 bg-gray-200 rounded w-1/4 mb-2"></div>
                   <div className="h-4 bg-gray-200 rounded w-1/2"></div>
                 </div>
@@ -363,7 +401,9 @@ export default function AdminBookings() {
           ) : error ? (
             <div className="text-center py-12">
               <XCircle className="h-16 w-16 text-red-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Error Loading Bookings</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Error Loading Bookings
+              </h3>
               <p className="text-gray-600 mb-4">{error}</p>
               <Button onClick={loadBookings} variant="outline">
                 <RefreshCw className="h-4 w-4 mr-2" />
@@ -373,30 +413,66 @@ export default function AdminBookings() {
           ) : filteredBookings.length > 0 ? (
             <div className="space-y-4">
               {filteredBookings.map((booking) => (
-                <div key={booking._id} className="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                <div
+                  key={booking._id}
+                  className="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <h3 className="font-semibold text-gray-900">{booking.bookingId}</h3>
+                        <h3 className="font-semibold text-gray-900">
+                          {booking.bookingId}
+                        </h3>
                         {getStatusBadge(booking.status)}
-                        {getPaymentBadge(booking.payment?.status || 'pending')}
+                        {getPaymentBadge(booking.payment?.status || "pending")}
                       </div>
-                      
+
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
                         <div className="space-y-1">
-                          <div><strong>User:</strong> {booking.userId?.name || 'Admin Booking'}</div>
-                          <div><strong>Contact:</strong> {booking.playerDetails?.contactPerson?.name || 'N/A'} ({booking.playerDetails?.contactPerson?.phone || 'N/A'})</div>
-                          <div><strong>Players:</strong> {booking.playerDetails?.playerCount || 0}</div>
+                          <div>
+                            <strong>User:</strong>{" "}
+                            {booking.userId?.name || "Admin Booking"}
+                          </div>
+                          <div>
+                            <strong>Contact:</strong>{" "}
+                            {booking.playerDetails?.contactPerson?.name ||
+                              "N/A"}{" "}
+                            (
+                            {booking.playerDetails?.contactPerson?.phone ||
+                              "N/A"}
+                            )
+                          </div>
+                          <div>
+                            <strong>Players:</strong>{" "}
+                            {booking.playerDetails?.playerCount || 0}
+                          </div>
                           {booking.playerDetails?.teamName && (
-                            <div><strong>Team:</strong> {booking.playerDetails.teamName}</div>
+                            <div>
+                              <strong>Team:</strong>{" "}
+                              {booking.playerDetails.teamName}
+                            </div>
                           )}
                         </div>
 
                         <div className="space-y-1">
-                          <div><strong>Ground:</strong> {booking.groundId?.name || 'Unknown Ground'}</div>
-                          <div><strong>Location:</strong> {booking.groundId?.location?.cityName || 'Unknown'}, {booking.groundId?.location?.state || 'Unknown'}</div>
-                          <div><strong>Date:</strong> {formatDate(booking.bookingDate)}</div>
-                          <div><strong>Time:</strong> {formatTime(booking.timeSlot?.startTime)} - {formatTime(booking.timeSlot?.endTime)}</div>
+                          <div>
+                            <strong>Ground:</strong>{" "}
+                            {booking.groundId?.name || "Unknown Ground"}
+                          </div>
+                          <div>
+                            <strong>Location:</strong>{" "}
+                            {booking.groundId?.location?.cityName || "Unknown"},{" "}
+                            {booking.groundId?.location?.state || "Unknown"}
+                          </div>
+                          <div>
+                            <strong>Date:</strong>{" "}
+                            {formatDate(booking.bookingDate)}
+                          </div>
+                          <div>
+                            <strong>Time:</strong>{" "}
+                            {formatTime(booking.timeSlot?.startTime)} -{" "}
+                            {formatTime(booking.timeSlot?.endTime)}
+                          </div>
                         </div>
                       </div>
 
@@ -416,30 +492,36 @@ export default function AdminBookings() {
                     </div>
 
                     <div className="flex items-center gap-2 ml-4">
-                      {booking.status === 'pending' && (
-                        <Button 
+                      {booking.status === "pending" && (
+                        <Button
                           size="sm"
-                          onClick={() => updateBookingStatus(booking._id, 'confirmed')}
+                          onClick={() =>
+                            updateBookingStatus(booking._id, "confirmed")
+                          }
                           className="bg-green-600 hover:bg-green-700"
                         >
                           <CheckCircle className="h-4 w-4 mr-1" />
                           Confirm
                         </Button>
                       )}
-                      
-                      {booking.status === 'confirmed' && (
-                        <Button 
+
+                      {booking.status === "confirmed" && (
+                        <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => updateBookingStatus(booking._id, 'completed')}
+                          onClick={() =>
+                            updateBookingStatus(booking._id, "completed")
+                          }
                         >
                           Complete
                         </Button>
                       )}
 
-                      <Select 
-                        value={booking.status} 
-                        onValueChange={(value) => updateBookingStatus(booking._id, value)}
+                      <Select
+                        value={booking.status}
+                        onValueChange={(value) =>
+                          updateBookingStatus(booking._id, value)
+                        }
                       >
                         <SelectTrigger className="w-32 h-8">
                           <SelectValue />
@@ -452,8 +534,8 @@ export default function AdminBookings() {
                         </SelectContent>
                       </Select>
 
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         size="sm"
                         onClick={() => deleteBooking(booking._id)}
                         className="text-red-600 hover:text-red-700"
@@ -468,12 +550,13 @@ export default function AdminBookings() {
           ) : (
             <div className="text-center py-12">
               <Calendar className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">No bookings found</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                No bookings found
+              </h3>
               <p className="text-gray-600">
-                {searchTerm || statusFilter !== 'all' || paymentFilter !== 'all' 
-                  ? 'Try adjusting your search or filter criteria.' 
-                  : 'Bookings will appear here once customers start making reservations.'
-                }
+                {searchTerm || statusFilter !== "all" || paymentFilter !== "all"
+                  ? "Try adjusting your search or filter criteria."
+                  : "Bookings will appear here once customers start making reservations."}
               </p>
             </div>
           )}

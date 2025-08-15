@@ -47,36 +47,54 @@ function AdminRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<AdminLogin />} />
-      <Route path="/dashboard" element={
-        <ProtectedAdminRoute>
-          <AdminDashboard />
-        </ProtectedAdminRoute>
-      } />
-      <Route path="/users" element={
-        <ProtectedAdminRoute>
-          <AdminUsers />
-        </ProtectedAdminRoute>
-      } />
-      <Route path="/grounds" element={
-        <ProtectedAdminRoute>
-          <AdminGrounds />
-        </ProtectedAdminRoute>
-      } />
-      <Route path="/financial" element={
-        <ProtectedAdminRoute>
-          <AdminFinancial />
-        </ProtectedAdminRoute>
-      } />
-      <Route path="/locations" element={
-        <ProtectedAdminRoute>
-          <AdminLocations />
-        </ProtectedAdminRoute>
-      } />
-      <Route path="/bookings" element={
-        <ProtectedAdminRoute>
-          <AdminBookings />
-        </ProtectedAdminRoute>
-      } />
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedAdminRoute>
+            <AdminDashboard />
+          </ProtectedAdminRoute>
+        }
+      />
+      <Route
+        path="/users"
+        element={
+          <ProtectedAdminRoute>
+            <AdminUsers />
+          </ProtectedAdminRoute>
+        }
+      />
+      <Route
+        path="/grounds"
+        element={
+          <ProtectedAdminRoute>
+            <AdminGrounds />
+          </ProtectedAdminRoute>
+        }
+      />
+      <Route
+        path="/financial"
+        element={
+          <ProtectedAdminRoute>
+            <AdminFinancial />
+          </ProtectedAdminRoute>
+        }
+      />
+      <Route
+        path="/locations"
+        element={
+          <ProtectedAdminRoute>
+            <AdminLocations />
+          </ProtectedAdminRoute>
+        }
+      />
+      <Route
+        path="/bookings"
+        element={
+          <ProtectedAdminRoute>
+            <AdminBookings />
+          </ProtectedAdminRoute>
+        }
+      />
       <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
       <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
     </Routes>
@@ -92,16 +110,25 @@ const App = () => (
         <AdminProvider>
           <Routes>
             {/* Redirect root to admin */}
-            <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
-            
+            <Route
+              path="/"
+              element={<Navigate to="/admin/dashboard" replace />}
+            />
+
             {/* Admin Routes */}
             <Route path="/admin/*" element={<AdminRoutes />} />
-            
+
             {/* Legacy routes - redirect to admin */}
-            <Route path="/home" element={<Navigate to="/admin/dashboard" replace />} />
-            
+            <Route
+              path="/home"
+              element={<Navigate to="/admin/dashboard" replace />}
+            />
+
             {/* Catch all - redirect to admin */}
-            <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
+            <Route
+              path="*"
+              element={<Navigate to="/admin/dashboard" replace />}
+            />
           </Routes>
         </AdminProvider>
       </BrowserRouter>

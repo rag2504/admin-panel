@@ -1,13 +1,25 @@
-import { useEffect, useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useApi } from '@/hooks/useApi';
-import { 
-  IndianRupee, 
-  TrendingUp, 
+import { useEffect, useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useApi } from "@/hooks/useApi";
+import {
+  IndianRupee,
+  TrendingUp,
   Calendar,
   CheckCircle,
   Clock,
@@ -15,8 +27,8 @@ import {
   RefreshCw,
   Download,
   CreditCard,
-  RotateCcw
-} from 'lucide-react';
+  RotateCcw,
+} from "lucide-react";
 
 interface FinancialData {
   totalRevenue: number;
@@ -33,11 +45,13 @@ interface FinancialData {
 }
 
 export default function AdminFinancial() {
-  const [financialData, setFinancialData] = useState<FinancialData | null>(null);
+  const [financialData, setFinancialData] = useState<FinancialData | null>(
+    null,
+  );
   const [loading, setLoading] = useState(true);
-  const [dateRange, setDateRange] = useState('month');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [dateRange, setDateRange] = useState("month");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const { get } = useApi();
 
   useEffect(() => {
@@ -49,56 +63,58 @@ export default function AdminFinancial() {
     const now = new Date();
     const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
     const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-    
-    setStartDate(firstDay.toISOString().split('T')[0]);
-    setEndDate(lastDay.toISOString().split('T')[0]);
+
+    setStartDate(firstDay.toISOString().split("T")[0]);
+    setEndDate(lastDay.toISOString().split("T")[0]);
   }, []);
 
   const loadFinancialData = async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      if (startDate) params.append('startDate', startDate);
-      if (endDate) params.append('endDate', endDate);
-      params.append('period', dateRange);
+      if (startDate) params.append("startDate", startDate);
+      if (endDate) params.append("endDate", endDate);
+      params.append("period", dateRange);
 
       const response = await get(`/admin/financial?${params.toString()}`);
       if (response.success) {
         setFinancialData(response.data.financial);
       }
     } catch (error) {
-      console.error('Failed to load financial data:', error);
+      console.error("Failed to load financial data:", error);
     } finally {
       setLoading(false);
     }
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0
+      maximumFractionDigits: 0,
     }).format(amount);
   };
 
   const formatDate = (date: string) => {
-    return new Intl.DateTimeFormat('en-IN', {
-      dateStyle: 'medium',
-      timeStyle: 'short'
+    return new Intl.DateTimeFormat("en-IN", {
+      dateStyle: "medium",
+      timeStyle: "short",
     }).format(new Date(date));
   };
 
   const getPaymentStatusBadge = (status: string) => {
     switch (status) {
-      case 'completed':
+      case "completed":
         return <Badge className="bg-green-100 text-green-800">Completed</Badge>;
-      case 'pending':
+      case "pending":
         return <Badge className="bg-yellow-100 text-yellow-800">Pending</Badge>;
-      case 'failed':
+      case "failed":
         return <Badge className="bg-red-100 text-red-800">Failed</Badge>;
-      case 'refunded':
-        return <Badge className="bg-purple-100 text-purple-800">Refunded</Badge>;
+      case "refunded":
+        return (
+          <Badge className="bg-purple-100 text-purple-800">Refunded</Badge>
+        );
       default:
         return <Badge variant="secondary">{status}</Badge>;
     }
@@ -137,8 +153,12 @@ export default function AdminFinancial() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Financial Dashboard</h1>
-          <p className="text-gray-600 mt-1">Track revenue, payments, and financial metrics</p>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Financial Dashboard
+          </h1>
+          <p className="text-gray-600 mt-1">
+            Track revenue, payments, and financial metrics
+          </p>
         </div>
         <div className="flex items-center gap-3">
           <Button onClick={loadFinancialData} variant="outline" size="sm">
@@ -160,7 +180,9 @@ export default function AdminFinancial() {
         <CardContent>
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1">
-              <label className="text-sm font-medium text-gray-700 mb-2 block">Start Date</label>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">
+                Start Date
+              </label>
               <Input
                 type="date"
                 value={startDate}
@@ -168,7 +190,9 @@ export default function AdminFinancial() {
               />
             </div>
             <div className="flex-1">
-              <label className="text-sm font-medium text-gray-700 mb-2 block">End Date</label>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">
+                End Date
+              </label>
               <Input
                 type="date"
                 value={endDate}
@@ -176,7 +200,9 @@ export default function AdminFinancial() {
               />
             </div>
             <div className="flex-1">
-              <label className="text-sm font-medium text-gray-700 mb-2 block">Period</label>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">
+                Period
+              </label>
               <Select value={dateRange} onValueChange={setDateRange}>
                 <SelectTrigger>
                   <SelectValue />
@@ -197,8 +223,12 @@ export default function AdminFinancial() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-green-100 text-sm font-medium">Total Revenue</p>
-                <p className="text-2xl font-bold">{formatCurrency(financialData.totalRevenue)}</p>
+                <p className="text-green-100 text-sm font-medium">
+                  Total Revenue
+                </p>
+                <p className="text-2xl font-bold">
+                  {formatCurrency(financialData.totalRevenue)}
+                </p>
               </div>
               <IndianRupee className="h-8 w-8 text-green-200" />
             </div>
@@ -209,8 +239,12 @@ export default function AdminFinancial() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm font-medium">Completed Payments</p>
-                <p className="text-3xl font-bold text-green-600">{financialData.completedPayments}</p>
+                <p className="text-gray-600 text-sm font-medium">
+                  Completed Payments
+                </p>
+                <p className="text-3xl font-bold text-green-600">
+                  {financialData.completedPayments}
+                </p>
               </div>
               <CheckCircle className="h-8 w-8 text-green-600" />
             </div>
@@ -221,8 +255,12 @@ export default function AdminFinancial() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm font-medium">Pending Payments</p>
-                <p className="text-3xl font-bold text-yellow-600">{financialData.pendingPayments}</p>
+                <p className="text-gray-600 text-sm font-medium">
+                  Pending Payments
+                </p>
+                <p className="text-3xl font-bold text-yellow-600">
+                  {financialData.pendingPayments}
+                </p>
               </div>
               <Clock className="h-8 w-8 text-yellow-600" />
             </div>
@@ -233,8 +271,12 @@ export default function AdminFinancial() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm font-medium">Failed Payments</p>
-                <p className="text-3xl font-bold text-red-600">{financialData.failedPayments}</p>
+                <p className="text-gray-600 text-sm font-medium">
+                  Failed Payments
+                </p>
+                <p className="text-3xl font-bold text-red-600">
+                  {financialData.failedPayments}
+                </p>
               </div>
               <XCircle className="h-8 w-8 text-red-600" />
             </div>
@@ -245,8 +287,12 @@ export default function AdminFinancial() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm font-medium">Refunded Payments</p>
-                <p className="text-3xl font-bold text-purple-600">{financialData.refundedPayments}</p>
+                <p className="text-gray-600 text-sm font-medium">
+                  Refunded Payments
+                </p>
+                <p className="text-3xl font-bold text-purple-600">
+                  {financialData.refundedPayments}
+                </p>
               </div>
               <RotateCcw className="h-8 w-8 text-purple-600" />
             </div>
@@ -257,12 +303,15 @@ export default function AdminFinancial() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm font-medium">Average Transaction</p>
+                <p className="text-gray-600 text-sm font-medium">
+                  Average Transaction
+                </p>
                 <p className="text-2xl font-bold text-blue-600">
                   {formatCurrency(
-                    financialData.completedPayments > 0 
-                      ? financialData.totalRevenue / financialData.completedPayments 
-                      : 0
+                    financialData.completedPayments > 0
+                      ? financialData.totalRevenue /
+                          financialData.completedPayments
+                      : 0,
                   )}
                 </p>
               </div>
@@ -277,25 +326,40 @@ export default function AdminFinancial() {
         <CardHeader>
           <CardTitle>Revenue Trends</CardTitle>
           <CardDescription>
-            Revenue breakdown by {dateRange === 'day' ? 'day' : 'month'}
+            Revenue breakdown by {dateRange === "day" ? "day" : "month"}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {financialData.revenueByPeriod.length > 0 ? (
             <div className="space-y-4">
               {financialData.revenueByPeriod.map((period, index) => {
-                const date = new Date(period._id.year, period._id.month - 1, period._id.day || 1);
-                const periodLabel = dateRange === 'day' 
-                  ? date.toLocaleDateString('en-IN')
-                  : date.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
-                
+                const date = new Date(
+                  period._id.year,
+                  period._id.month - 1,
+                  period._id.day || 1,
+                );
+                const periodLabel =
+                  dateRange === "day"
+                    ? date.toLocaleDateString("en-IN")
+                    : date.toLocaleDateString("en-IN", {
+                        month: "long",
+                        year: "numeric",
+                      });
+
                 return (
-                  <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+                  >
                     <div className="flex items-center gap-4">
                       <Calendar className="h-5 w-5 text-gray-500" />
                       <div>
-                        <div className="font-medium text-gray-900">{periodLabel}</div>
-                        <div className="text-sm text-gray-600">{period.bookings} bookings</div>
+                        <div className="font-medium text-gray-900">
+                          {periodLabel}
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          {period.bookings} bookings
+                        </div>
                       </div>
                     </div>
                     <div className="text-right">
@@ -313,7 +377,9 @@ export default function AdminFinancial() {
           ) : (
             <div className="text-center py-8">
               <TrendingUp className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">No revenue data for selected period</p>
+              <p className="text-gray-500">
+                No revenue data for selected period
+              </p>
             </div>
           )}
         </CardContent>
@@ -323,15 +389,16 @@ export default function AdminFinancial() {
       <Card>
         <CardHeader>
           <CardTitle>Recent Transactions</CardTitle>
-          <CardDescription>
-            Latest payment transactions
-          </CardDescription>
+          <CardDescription>Latest payment transactions</CardDescription>
         </CardHeader>
         <CardContent>
           {financialData.recentTransactions.length > 0 ? (
             <div className="space-y-4">
               {financialData.recentTransactions.map((transaction, index) => (
-                <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+                >
                   <div className="flex items-center gap-4">
                     <div className="p-2 bg-blue-100 rounded-full">
                       <CreditCard className="h-5 w-5 text-blue-600" />
@@ -341,10 +408,14 @@ export default function AdminFinancial() {
                         {transaction.bookingId}
                       </div>
                       <div className="text-sm text-gray-600">
-                        {transaction.userId?.name || 'Admin Booking'} • {transaction.groundId?.name}
+                        {transaction.userId?.name || "Admin Booking"} •{" "}
+                        {transaction.groundId?.name}
                       </div>
                       <div className="text-xs text-gray-500">
-                        {formatDate(transaction.payment?.paymentDate || transaction.createdAt)}
+                        {formatDate(
+                          transaction.payment?.paymentDate ||
+                            transaction.createdAt,
+                        )}
                       </div>
                     </div>
                   </div>
@@ -353,10 +424,12 @@ export default function AdminFinancial() {
                       {formatCurrency(transaction.pricing?.totalAmount || 0)}
                     </div>
                     <div className="flex items-center gap-2 justify-end">
-                      {getPaymentStatusBadge(transaction.payment?.status || 'pending')}
+                      {getPaymentStatusBadge(
+                        transaction.payment?.status || "pending",
+                      )}
                     </div>
                     <div className="text-xs text-gray-500 mt-1">
-                      {transaction.payment?.method || 'N/A'}
+                      {transaction.payment?.method || "N/A"}
                     </div>
                   </div>
                 </div>

@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from "react";
 
 interface AdminUser {
   id?: string;
@@ -24,8 +24,8 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const savedToken = localStorage.getItem('adminToken');
-    const savedUser = localStorage.getItem('adminUser');
+    const savedToken = localStorage.getItem("adminToken");
+    const savedUser = localStorage.getItem("adminUser");
 
     if (savedToken && savedUser) {
       try {
@@ -33,9 +33,9 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         setToken(savedToken);
         setUser(parsedUser);
       } catch (error) {
-        console.error('Error parsing saved user:', error);
-        localStorage.removeItem('adminToken');
-        localStorage.removeItem('adminUser');
+        console.error("Error parsing saved user:", error);
+        localStorage.removeItem("adminToken");
+        localStorage.removeItem("adminUser");
       }
     }
     setLoading(false);
@@ -44,15 +44,15 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   const login = (newToken: string, newUser: AdminUser) => {
     setToken(newToken);
     setUser(newUser);
-    localStorage.setItem('adminToken', newToken);
-    localStorage.setItem('adminUser', JSON.stringify(newUser));
+    localStorage.setItem("adminToken", newToken);
+    localStorage.setItem("adminUser", JSON.stringify(newUser));
   };
 
   const logout = () => {
     setToken(null);
     setUser(null);
-    localStorage.removeItem('adminToken');
-    localStorage.removeItem('adminUser');
+    localStorage.removeItem("adminToken");
+    localStorage.removeItem("adminUser");
   };
 
   const value = {
@@ -61,20 +61,18 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     login,
     logout,
     isAuthenticated: !!token && !!user,
-    loading
+    loading,
   };
 
   return (
-    <AdminContext.Provider value={value}>
-      {children}
-    </AdminContext.Provider>
+    <AdminContext.Provider value={value}>{children}</AdminContext.Provider>
   );
 }
 
 export function useAdmin() {
   const context = useContext(AdminContext);
   if (context === undefined) {
-    throw new Error('useAdmin must be used within an AdminProvider');
+    throw new Error("useAdmin must be used within an AdminProvider");
   }
   return context;
 }
