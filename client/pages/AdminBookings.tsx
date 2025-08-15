@@ -88,13 +88,20 @@ export default function AdminBookings() {
 
   const loadBookings = async () => {
     setLoading(true);
+    setError(null);
     try {
       const response = await get('/admin/bookings');
       if (response.success) {
         setBookings(response.data.bookings || []);
+        setError(null);
+      } else {
+        setError(response.error || 'Failed to load bookings');
+        setBookings([]);
       }
     } catch (error) {
       console.error('Failed to load bookings:', error);
+      setError('Network error: Unable to connect to server');
+      setBookings([]);
     } finally {
       setLoading(false);
     }
