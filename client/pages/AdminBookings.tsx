@@ -168,12 +168,18 @@ export default function AdminBookings() {
     }).format(new Date(date));
   };
 
-  const formatTime = (time: string) => {
-    return new Intl.DateTimeFormat('en-IN', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
-    }).format(new Date(`2000-01-01 ${time}`));
+  const formatTime = (time?: string) => {
+    if (!time) return 'N/A';
+    try {
+      return new Intl.DateTimeFormat('en-IN', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      }).format(new Date(`2000-01-01 ${time}`));
+    } catch (error) {
+      console.error('Error formatting time:', time, error);
+      return time;
+    }
   };
 
   const getStatusBadge = (status: string) => {
