@@ -129,7 +129,7 @@ export default function AdminDashboard() {
         </Card>
 
         <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
-          <CardContent className="p-6">
+          <CardContent className="p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-purple-100 text-sm font-medium">Total Grounds</p>
