@@ -155,15 +155,18 @@ const adminAuth = (req: any, res: any, next: any) => {
 // Admin Login
 app.post('/api/admin/login', async (req, res) => {
   const { email, password } = req.body;
-  
+
+  console.log('Login attempt:', { email, password: password ? '***' : 'empty' });
+
   try {
     // Check for hardcoded admin first
     if (email === 'admin@boxcric.com' && password === 'admin123') {
+      console.log('Hardcoded admin login successful');
       const token = jwt.sign({ email, role: 'admin' }, JWT_SECRET, { expiresIn: '7d' });
-      return res.json({ 
-        success: true, 
-        token, 
-        admin: { email, role: 'admin' } 
+      return res.json({
+        success: true,
+        token,
+        admin: { email, role: 'admin' }
       });
     }
 
