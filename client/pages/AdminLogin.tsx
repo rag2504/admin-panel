@@ -19,8 +19,6 @@ export default function AdminLogin() {
     setLoading(true);
     setError('');
 
-    console.log('Attempting login with:', { email, password: '***' });
-
     try {
       const response = await fetch('/api/admin/login', {
         method: 'POST',
@@ -28,19 +26,13 @@ export default function AdminLogin() {
         body: JSON.stringify({ email, password })
       });
 
-      console.log('Response status:', response.status);
-      console.log('Response ok:', response.ok);
-
       const data = await response.json();
-      console.log('Response data:', data);
 
       if (data.success) {
-        console.log('Login successful, storing token and redirecting...');
         localStorage.setItem('adminToken', data.token);
         localStorage.setItem('adminUser', JSON.stringify(data.admin));
         navigate('/admin/dashboard');
       } else {
-        console.error('Login failed:', data.message);
         setError(data.message || 'Login failed');
       }
     } catch (error) {
