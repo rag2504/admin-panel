@@ -284,43 +284,45 @@ export default function AdminUsers() {
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-600">Verified</span>
+                      <span className="text-sm text-gray-600 whitespace-nowrap">Verified</span>
                       <Switch
                         checked={user.isVerified}
                         onCheckedChange={(checked) => updateUserStatus(user._id, 'isVerified', checked)}
                       />
                     </div>
 
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => blockUser(user._id, user.isActive)}
-                      className={user.isActive ? "text-orange-600 hover:text-orange-700" : "text-green-600 hover:text-green-700"}
-                    >
-                      {user.isActive ? (
-                        <>
-                          <ShieldOff className="h-4 w-4 mr-1" />
-                          Block
-                        </>
-                      ) : (
-                        <>
-                          <Shield className="h-4 w-4 mr-1" />
-                          Unblock
-                        </>
-                      )}
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => blockUser(user._id, user.isActive)}
+                        className={user.isActive ? "text-orange-600 hover:text-orange-700" : "text-green-600 hover:text-green-700"}
+                      >
+                        {user.isActive ? (
+                          <>
+                            <ShieldOff className="h-4 w-4 sm:mr-1" />
+                            <span className="hidden sm:inline">Block</span>
+                          </>
+                        ) : (
+                          <>
+                            <Shield className="h-4 w-4 sm:mr-1" />
+                            <span className="hidden sm:inline">Unblock</span>
+                          </>
+                        )}
+                      </Button>
 
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => deleteUser(user._id, user.name)}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      <Trash2 className="h-4 w-4 mr-1" />
-                      Delete
-                    </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => deleteUser(user._id, user.name)}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <Trash2 className="h-4 w-4 sm:mr-1" />
+                        <span className="hidden sm:inline">Delete</span>
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ))}
