@@ -514,12 +514,70 @@ export default function AdminGrounds() {
                     <Input
                       value={formData.owner?.contact || ''}
                       onChange={(e) => setFormData({
-                        ...formData, 
+                        ...formData,
                         owner: {...formData.owner, contact: e.target.value}
                       })}
                       placeholder="Enter contact number"
                       required
                     />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">
+                      Owner Password *
+                    </label>
+                    <Input
+                      type="password"
+                      value={formData.owner?.password || ''}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        owner: {...formData.owner, password: e.target.value}
+                      })}
+                      placeholder="Enter owner password"
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Rating and Reviews */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Rating & Reviews</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">
+                      Average Rating (0-5) *
+                    </label>
+                    <Input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      max="5"
+                      value={formData.rating?.average || 0}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        rating: {...formData.rating, average: parseFloat(e.target.value) || 0}
+                      })}
+                      placeholder="e.g., 4.2"
+                      required
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Rating out of 5 stars</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">
+                      Number of Reviews *
+                    </label>
+                    <Input
+                      type="number"
+                      min="0"
+                      value={formData.rating?.count || 0}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        rating: {...formData.rating, count: parseInt(e.target.value) || 0}
+                      })}
+                      placeholder="e.g., 25"
+                      required
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Total number of reviews</p>
                   </div>
                 </div>
               </div>
