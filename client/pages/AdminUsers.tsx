@@ -73,13 +73,41 @@ export default function AdminUsers() {
     try {
       const response = await patch(`/admin/users/${userId}`, { [field]: value });
       if (response.success) {
-        setUsers(users.map(user => 
+        setUsers(users.map(user =>
           user._id === userId ? { ...user, [field]: value } : user
         ));
       }
     } catch (error) {
       console.error('Failed to update user:', error);
     }
+  };
+
+  const deleteUser = async (userId: string, userName: string) => {
+    if (!confirm(`Are you sure you want to permanently delete user "${userName}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const response = await del(`/admin/users/${userId}`);
+      if (response.success) {
+        setUsers(users.filter(user => user._id !== userId));
+        // Update pagination if needed
+        if (users.length - 1 === 0 && pagination.page > 1) {
+          setPagination(prev => ({ ...prev, page: prev.page - 1 }));
+        }
+      }
+    } catch (error) {
+      console.error('Failed to delete user:', error);
+    }
+  };
+
+  const blockUser = async (userId: string, currentStatus: boolean) => {
+    const action = currentStatus ? 'block' : 'unblock';
+    if (!confirm(`Are you sure you want to ${action} this user?`)) {
+      return;
+    }
+
+    await updateUserStatus(userId, 'isActive', !currentStatus);
   };
 
   const formatDate = (date: string) => {
