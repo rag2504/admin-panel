@@ -10,7 +10,6 @@ import { AdminProvider, useAdmin } from "@/contexts/AdminContext";
 import AdminLayout from "@/components/AdminLayout";
 
 // Pages
-import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 
 // Admin Pages
