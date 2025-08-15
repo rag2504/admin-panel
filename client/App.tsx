@@ -19,6 +19,8 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminUsers from "./pages/AdminUsers";
 import AdminGrounds from "./pages/AdminGrounds";
 import AdminFinancial from "./pages/AdminFinancial";
+import AdminLocations from "./pages/AdminLocations";
+import AdminBookings from "./pages/AdminBookings";
 
 const queryClient = new QueryClient();
 
