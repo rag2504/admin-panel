@@ -263,8 +263,8 @@ export default function AdminBookings() {
                 <p className="text-2xl font-bold text-emerald-600">
                   {formatCurrency(
                     bookings
-                      .filter(b => b.payment.status === 'completed')
-                      .reduce((sum, b) => sum + b.pricing.totalAmount, 0)
+                      .filter(b => b.payment?.status === 'completed')
+                      .reduce((sum, b) => sum + (b.pricing?.totalAmount || 0), 0)
                   )}
                 </p>
               </div>
