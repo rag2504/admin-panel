@@ -244,30 +244,30 @@ export default function AdminUsers() {
           ) : users.length > 0 ? (
             <div className="space-y-4">
               {users.map((user) => (
-                <div key={user._id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                <div key={user._id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors gap-4">
+                  <div className="flex items-center space-x-4 flex-1 min-w-0">
+                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
                       <span className="text-blue-600 font-bold text-lg">
                         {user.name.charAt(0).toUpperCase()}
                       </span>
                     </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3">
-                        <h3 className="font-semibold text-gray-900">{user.name}</h3>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                        <h3 className="font-semibold text-gray-900 truncate">{user.name}</h3>
                         {getStatusBadge(user)}
                       </div>
-                      <div className="flex items-center gap-4 text-sm text-gray-600 mt-1">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-gray-600 mt-1">
                         <div className="flex items-center gap-1">
-                          <Mail className="h-3 w-3" />
-                          {user.email}
+                          <Mail className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate">{user.email}</span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <Phone className="h-3 w-3" />
-                          {user.phone}
+                          <Phone className="h-3 w-3 flex-shrink-0" />
+                          <span>{user.phone}</span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          Joined {formatDate(user.createdAt)}
+                          <Calendar className="h-3 w-3 flex-shrink-0" />
+                          <span className="whitespace-nowrap">Joined {formatDate(user.createdAt)}</span>
                         </div>
                       </div>
                       {user.lastLogin ? (
