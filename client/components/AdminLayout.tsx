@@ -107,7 +107,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           {/* User Info */}
           <div className="p-4 border-t">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
                 <span className="text-blue-600 font-bold text-sm">
                   {user?.name?.charAt(0) || user?.email?.charAt(0) || 'A'}
                 </span>
