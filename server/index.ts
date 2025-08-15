@@ -633,7 +633,7 @@ async function initializeData() {
 }
 
 // Connect to MongoDB and start server only in production
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   mongoose.connect(MONGODB_URI)
     .then(async () => {
       console.log('✅ Connected to MongoDB');
