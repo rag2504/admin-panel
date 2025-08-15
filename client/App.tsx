@@ -98,7 +98,7 @@ const App = () => (
             <Route path="/admin/*" element={<AdminRoutes />} />
             
             {/* Legacy routes - redirect to admin */}
-            <Route path="/home" element={<Index />} />
+            <Route path="/home" element={<Navigate to="/admin/dashboard" replace />} />
             
             {/* Catch all - redirect to admin */}
             <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
