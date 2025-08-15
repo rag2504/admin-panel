@@ -652,15 +652,21 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 }
 
 // Initialize MongoDB connection for development
-if (process.env.NODE_ENV !== 'production') {
-  mongoose.connect(MONGODB_URI)
-    .then(async () => {
+const connectToMongoDB = async () => {
+  try {
+    if (mongoose.connection.readyState === 0) {
+      await mongoose.connect(MONGODB_URI);
       console.log('✅ Connected to MongoDB (dev mode)');
       await initializeData();
-    })
-    .catch((error) => {
-      console.error('❌ MongoDB connection error:', error);
-    });
+    }
+  } catch (error) {
+    console.error('❌ MongoDB connection error:', error);
+  }
+};
+
+// Auto-connect in development
+if (process.env.NODE_ENV !== 'production') {
+  connectToMongoDB();
 }
 
 export default createServer;
