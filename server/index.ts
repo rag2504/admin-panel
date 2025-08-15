@@ -317,7 +317,7 @@ export function createServer() {
         { isActive, isVerified },
         { new: true }
       ).select('-password');
-      
+
       if (!user) {
         return res.status(404).json({ success: false, message: 'User not found' });
       }
@@ -326,6 +326,26 @@ export function createServer() {
     } catch (error) {
       console.error('User update error:', error);
       res.status(500).json({ success: false, message: 'Failed to update user' });
+    }
+  });
+
+  app.delete('/api/admin/users/:id', adminAuth, async (req, res) => {
+    try {
+      const user = await User.findById(req.params.id);
+      if (!user) {
+        return res.status(404).json({ success: false, message: 'User not found' });
+      }
+
+      // Prevent deleting admin users
+      if (user.role === 'admin') {
+        return res.status(403).json({ success: false, message: 'Cannot delete admin users' });
+      }
+
+      await User.findByIdAndDelete(req.params.id);
+      res.json({ success: true, message: 'User deleted successfully' });
+    } catch (error) {
+      console.error('User deletion error:', error);
+      res.status(500).json({ success: false, message: 'Failed to delete user' });
     }
   });
 
