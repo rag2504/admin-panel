@@ -139,26 +139,26 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         {/* Top bar */}
         <div className="bg-white shadow-sm border-b px-4 py-3 lg:px-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 flex-1 min-w-0">
               <Button
                 variant="ghost"
                 size="sm"
-                className="lg:hidden"
+                className="lg:hidden flex-shrink-0"
                 onClick={() => setSidebarOpen(true)}
               >
                 <Menu className="h-5 w-5" />
               </Button>
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900">
+              <div className="min-w-0 flex-1">
+                <h2 className="text-lg font-semibold text-gray-900 truncate">
                   {navigation.find(nav => nav.href === location.pathname)?.name || 'Admin Panel'}
                 </h2>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-gray-500 hidden sm:block">
                   Welcome back, {user?.name || 'Admin'}
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <Badge variant="outline" className="hidden sm:inline-flex">
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <Badge variant="outline" className="hidden sm:inline-flex text-xs">
                 {user?.role || 'Admin'}
               </Badge>
               <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
