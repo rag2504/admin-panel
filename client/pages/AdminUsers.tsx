@@ -239,9 +239,16 @@ export default function AdminUsers() {
                           Joined {formatDate(user.createdAt)}
                         </div>
                       </div>
-                      {user.lastLogin && (
+                      {user.lastLogin ? (
+                        <div className="text-xs text-green-600 font-medium mt-1">
+                          Last login: {new Intl.DateTimeFormat('en-IN', {
+                            dateStyle: 'medium',
+                            timeStyle: 'medium'
+                          }).format(new Date(user.lastLogin))}
+                        </div>
+                      ) : (
                         <div className="text-xs text-gray-500 mt-1">
-                          Last login: {formatDate(user.lastLogin)}
+                          Never logged in
                         </div>
                       )}
                     </div>
