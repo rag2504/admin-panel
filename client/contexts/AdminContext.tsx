@@ -27,10 +27,14 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     const savedToken = localStorage.getItem('adminToken');
     const savedUser = localStorage.getItem('adminUser');
 
+    console.log('AdminContext: Checking saved auth', { savedToken: !!savedToken, savedUser: !!savedUser });
+
     if (savedToken && savedUser) {
       try {
+        const parsedUser = JSON.parse(savedUser);
         setToken(savedToken);
-        setUser(JSON.parse(savedUser));
+        setUser(parsedUser);
+        console.log('AdminContext: Auth restored', { user: parsedUser });
       } catch (error) {
         console.error('Error parsing saved user:', error);
         localStorage.removeItem('adminToken');
