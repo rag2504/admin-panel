@@ -141,7 +141,7 @@ export default function AdminDashboard() {
         </Card>
 
         <Card className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
-          <CardContent className="p-6">
+          <CardContent className="p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-orange-100 text-sm font-medium">Total Bookings</p>
