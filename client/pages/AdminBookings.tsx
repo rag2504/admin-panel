@@ -103,11 +103,11 @@ export default function AdminBookings() {
     let filtered = bookings;
 
     if (searchTerm) {
-      filtered = filtered.filter(booking => 
-        booking.bookingId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      filtered = filtered.filter(booking =>
+        booking.bookingId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         booking.userId?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        booking.groundId.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        booking.playerDetails.contactPerson.name.toLowerCase().includes(searchTerm.toLowerCase())
+        booking.groundId?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        booking.playerDetails?.contactPerson?.name?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
