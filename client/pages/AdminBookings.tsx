@@ -116,7 +116,7 @@ export default function AdminBookings() {
     }
 
     if (paymentFilter !== 'all') {
-      filtered = filtered.filter(booking => booking.payment.status === paymentFilter);
+      filtered = filtered.filter(booking => booking.payment?.status === paymentFilter);
     }
 
     setFilteredBookings(filtered);
