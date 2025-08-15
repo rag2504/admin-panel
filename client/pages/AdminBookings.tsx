@@ -162,10 +162,16 @@ export default function AdminBookings() {
     }).format(amount);
   };
 
-  const formatDate = (date: string) => {
-    return new Intl.DateTimeFormat('en-IN', {
-      dateStyle: 'medium'
-    }).format(new Date(date));
+  const formatDate = (date?: string) => {
+    if (!date) return 'N/A';
+    try {
+      return new Intl.DateTimeFormat('en-IN', {
+        dateStyle: 'medium'
+      }).format(new Date(date));
+    } catch (error) {
+      console.error('Error formatting date:', date, error);
+      return date;
+    }
   };
 
   const formatTime = (time?: string) => {
