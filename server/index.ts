@@ -7,16 +7,16 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+// MongoDB Connection
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://rag123456:rag123456@cluster0.qipvo.mongodb.net/boxcricket?retryWrites=true&w=majority';
+const JWT_SECRET = process.env.JWT_SECRET || 'adminpanel_secret';
+
 // Export createServer function for Vite integration
 export function createServer() {
   const app = express();
 
   app.use(cors());
   app.use(express.json());
-
-// MongoDB Connection
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://rag123456:rag123456@cluster0.qipvo.mongodb.net/boxcricket?retryWrites=true&w=majority';
-const JWT_SECRET = process.env.JWT_SECRET || 'adminpanel_secret';
 
 // MongoDB Schemas
 const userSchema = new mongoose.Schema({
