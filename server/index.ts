@@ -7,10 +7,12 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const app = express();
+// Export createServer function for Vite integration
+export function createServer() {
+  const app = express();
 
-app.use(cors());
-app.use(express.json());
+  app.use(cors());
+  app.use(express.json());
 
 // MongoDB Connection
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://rag123456:rag123456@cluster0.qipvo.mongodb.net/boxcricket?retryWrites=true&w=majority';
@@ -627,20 +629,38 @@ async function initializeData() {
   }
 }
 
-// Connect to MongoDB and start server
-mongoose.connect(MONGODB_URI)
-  .then(async () => {
-    console.log('✅ Connected to MongoDB');
-    await initializeData();
-    
-    const PORT = process.env.PORT || 3001;
-    app.listen(PORT, () => {
-      console.log(`✅ Admin server running on port ${PORT}`);
-    });
-  })
-  .catch((error) => {
-    console.error('❌ MongoDB connection error:', error);
-    process.exit(1);
-  });
+  return app;
+}
 
-export default app;
+// Connect to MongoDB and start server only in production
+if (require.main === module) {
+  mongoose.connect(MONGODB_URI)
+    .then(async () => {
+      console.log('✅ Connected to MongoDB');
+      await initializeData();
+
+      const app = createServer();
+      const PORT = process.env.PORT || 3001;
+      app.listen(PORT, () => {
+        console.log(`✅ Admin server running on port ${PORT}`);
+      });
+    })
+    .catch((error) => {
+      console.error('❌ MongoDB connection error:', error);
+      process.exit(1);
+    });
+}
+
+// Initialize MongoDB connection for development
+if (process.env.NODE_ENV !== 'production') {
+  mongoose.connect(MONGODB_URI)
+    .then(async () => {
+      console.log('✅ Connected to MongoDB (dev mode)');
+      await initializeData();
+    })
+    .catch((error) => {
+      console.error('❌ MongoDB connection error:', error);
+    });
+}
+
+export default createServer;
