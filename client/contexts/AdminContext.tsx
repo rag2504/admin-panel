@@ -58,12 +58,22 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('adminUser');
   };
 
+  const isAuthenticated = !!token && !!user;
+
+  console.log('AdminContext: Current state', {
+    hasToken: !!token,
+    hasUser: !!user,
+    isAuthenticated,
+    loading,
+    userEmail: user?.email
+  });
+
   const value = {
     user,
     token,
     login,
     logout,
-    isAuthenticated: !!token && !!user,
+    isAuthenticated,
     loading
   };
 
