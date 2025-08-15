@@ -349,7 +349,7 @@ export default function AdminBookings() {
                       <div className="flex items-center gap-3 mb-2">
                         <h3 className="font-semibold text-gray-900">{booking.bookingId}</h3>
                         {getStatusBadge(booking.status)}
-                        {getPaymentBadge(booking.payment.status)}
+                        {getPaymentBadge(booking.payment?.status || 'pending')}
                       </div>
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
