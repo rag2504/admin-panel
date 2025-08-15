@@ -64,6 +64,7 @@ interface Ground {
     name: string;
     email: string;
     contact: string;
+    password?: string;
   };
 }
 
