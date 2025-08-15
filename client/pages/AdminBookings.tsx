@@ -372,12 +372,12 @@ export default function AdminBookings() {
 
                       <div className="flex items-center gap-4 mt-3 text-sm">
                         <div className="font-semibold text-green-600">
-                          {formatCurrency(booking.pricing.totalAmount)}
+                          {formatCurrency(booking.pricing?.totalAmount || 0)}
                         </div>
                         <div className="text-gray-500">
                           Created: {formatDate(booking.createdAt)}
                         </div>
-                        {booking.payment.paymentDate && (
+                        {booking.payment?.paymentDate && (
                           <div className="text-gray-500">
                             Paid: {formatDate(booking.payment.paymentDate)}
                           </div>
