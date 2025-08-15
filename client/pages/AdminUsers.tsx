@@ -6,16 +6,19 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { useApi } from '@/hooks/useApi';
-import { 
-  Search, 
-  Users, 
-  UserCheck, 
+import {
+  Search,
+  Users,
+  UserCheck,
   UserX,
   Mail,
   Phone,
   Calendar,
   Filter,
-  RefreshCw
+  RefreshCw,
+  Trash2,
+  Shield,
+  ShieldOff
 } from 'lucide-react';
 
 interface User {
