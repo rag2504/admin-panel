@@ -348,6 +348,16 @@ export default function AdminBookings() {
                 </div>
               ))}
             </div>
+          ) : error ? (
+            <div className="text-center py-12">
+              <XCircle className="h-16 w-16 text-red-400 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Error Loading Bookings</h3>
+              <p className="text-gray-600 mb-4">{error}</p>
+              <Button onClick={loadBookings} variant="outline">
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Try Again
+              </Button>
+            </div>
           ) : filteredBookings.length > 0 ? (
             <div className="space-y-4">
               {filteredBookings.map((booking) => (
