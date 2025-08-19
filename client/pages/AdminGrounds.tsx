@@ -67,6 +67,7 @@ interface Ground {
     cafeteria: boolean;
     equipment: boolean;
   };
+  amenities: string[];
   rating: {
     average: number;
     count: number;
@@ -92,7 +93,46 @@ export default function AdminGrounds() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingGround, setEditingGround] = useState<Ground | null>(null);
-  const [formData, setFormData] = useState<Partial<Ground>>({});
+  const [formData, setFormData] = useState<Partial<Ground>>({
+    name: "",
+    description: "",
+    location: {
+      address: "",
+      cityId: "",
+      cityName: "",
+      state: "",
+      pincode: "",
+    },
+    price: {
+      ranges: [
+        { start: "20:00", end: "08:00", perHour: 500 },
+        { start: "08:00", end: "20:00", perHour: 400 },
+      ],
+      discount: 0,
+    },
+    images: [
+      { url: "", alt: "", isPrimary: true },
+      { url: "", alt: "", isPrimary: false },
+      { url: "", alt: "", isPrimary: false },
+    ],
+    features: {
+      pitchType: "",
+      capacity: 22,
+      lighting: false,
+      parking: false,
+      changeRoom: false,
+      washroom: false,
+      cafeteria: false,
+      equipment: false,
+    },
+    amenities: [],
+    status: "active",
+    owner: {
+      name: "",
+      email: "",
+      contact: "",
+    },
+  });
   const { get, post, put, delete: del } = useApi();
 
   useEffect(() => {
@@ -127,6 +167,15 @@ export default function AdminGrounds() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate pricing ranges
+    if (formData.price?.ranges) {
+      const validationError = validatePricingRanges(formData.price.ranges);
+      if (validationError) {
+        alert(validationError);
+        return;
+      }
+    }
 
     try {
       let response;
@@ -164,6 +213,67 @@ export default function AdminGrounds() {
     }
   };
 
+  const validatePricingRanges = (ranges: Array<{ start: string; end: string; perHour: number }>) => {
+    if (ranges.length !== 2) {
+      return "Exactly 2 pricing ranges are required to cover 24 hours.";
+    }
+
+    const [range1, range2] = ranges;
+
+    // Convert time strings to minutes for easier comparison
+    const timeToMinutes = (time: string) => {
+      const [hours, minutes] = time.split(':').map(Number);
+      return hours * 60 + minutes;
+    };
+
+    const range1Start = timeToMinutes(range1.start);
+    const range1End = timeToMinutes(range1.end);
+    const range2Start = timeToMinutes(range2.start);
+    const range2End = timeToMinutes(range2.end);
+
+    // Check if ranges are complementary (cover full 24 hours)
+    // Case 1: First range doesn't cross midnight
+    if (range1Start < range1End) {
+      // Second range should start where first ends and end where first starts
+      if (range2Start !== range1End || range2End !== range1Start) {
+        return `Pricing ranges must be complementary. If first range is ${range1.start}-${range1.end}, second range should be ${range1.end}-${range1.start}.`;
+      }
+    }
+    // Case 2: First range crosses midnight
+    else {
+      // Second range should start where first ends and end where first starts
+      if (range2Start !== range1End || range2End !== range1Start) {
+        return `Pricing ranges must be complementary. If first range is ${range1.start}-${range1.end}, second range should be ${range1.end}-${range1.start}.`;
+      }
+    }
+
+    return null; // No validation error
+  };
+
+  const updateComplementaryRange = (rangeIndex: number, field: 'start' | 'end', value: string) => {
+    const newRanges = [...(formData.price?.ranges || [])];
+    if (newRanges.length < 2) {
+      newRanges.push({ start: "08:00", end: "20:00", perHour: 400 });
+    }
+
+    // Only allow changes to the first range (index 0)
+    if (rangeIndex === 0) {
+      newRanges[0] = { ...newRanges[0], [field]: value };
+
+      // Auto-update the second range to be complementary
+      newRanges[1] = {
+        ...newRanges[1],
+        start: newRanges[0].end,
+        end: newRanges[0].start,
+      };
+    }
+
+    setFormData({
+      ...formData,
+      price: { ...formData.price, ranges: newRanges },
+    });
+  };
+
   const resetForm = () => {
     setShowForm(false);
     setEditingGround(null);
@@ -179,12 +289,16 @@ export default function AdminGrounds() {
       },
       price: {
         ranges: [
-          { start: "06:00", end: "18:00", perHour: 500 },
-          { start: "18:00", end: "06:00", perHour: 700 },
+          { start: "20:00", end: "08:00", perHour: 500 },
+          { start: "08:00", end: "20:00", perHour: 400 },
         ],
         discount: 0,
       },
-      images: [],
+      images: [
+        { url: "", alt: "", isPrimary: true },
+        { url: "", alt: "", isPrimary: false },
+        { url: "", alt: "", isPrimary: false },
+      ],
       features: {
         pitchType: "",
         capacity: 22,
@@ -195,6 +309,7 @@ export default function AdminGrounds() {
         cafeteria: false,
         equipment: false,
       },
+      status: "active",
       owner: {
         name: "",
         email: "",
@@ -381,60 +496,60 @@ export default function AdminGrounds() {
               {/* Pricing */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Pricing</h3>
+                <p className="text-sm text-gray-600">
+                  Set two complementary time ranges that cover 24 hours. When you change one range, the other will automatically adjust to ensure full coverage.
+                </p>
                 <div className="space-y-3">
-                  {formData.price?.ranges?.map((range, index) => (
+                  {(formData.price?.ranges || [
+                    { start: "20:00", end: "08:00", perHour: 500 },
+                    { start: "08:00", end: "20:00", perHour: 400 },
+                  ]).map((range, index) => (
                     <div
                       key={index}
-                      className="grid grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg"
+                      className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg"
                     >
-                      <div>
-                        <label className="text-sm font-medium text-gray-700 mb-1 block">
-                          Start Time
-                        </label>
-                        <Input
-                          type="time"
+                      <div className="flex items-center gap-2">
+                        <Select
                           value={range.start}
-                          onChange={(e) => {
-                            const newRanges = [
-                              ...(formData.price?.ranges || []),
-                            ];
-                            newRanges[index] = {
-                              ...range,
-                              start: e.target.value,
-                            };
-                            setFormData({
-                              ...formData,
-                              price: { ...formData.price, ranges: newRanges },
-                            });
-                          }}
-                        />
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-700 mb-1 block">
-                          End Time
-                        </label>
-                        <Input
-                          type="time"
+                          onValueChange={(value) => updateComplementaryRange(index, 'start', value)}
+                          disabled={index === 1}
+                        >
+                          <SelectTrigger className="w-20">
+                            <SelectValue placeholder="Start" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Array.from({ length: 24 }, (_, i) => {
+                              const hour = i.toString().padStart(2, '0');
+                              return (
+                                <SelectItem key={`${hour}:00`} value={`${hour}:00`}>
+                                  {hour}:00
+                                </SelectItem>
+                              );
+                            })}
+                          </SelectContent>
+                        </Select>
+                        <span className="text-sm text-gray-600">to</span>
+                        <Select
                           value={range.end}
-                          onChange={(e) => {
-                            const newRanges = [
-                              ...(formData.price?.ranges || []),
-                            ];
-                            newRanges[index] = {
-                              ...range,
-                              end: e.target.value,
-                            };
-                            setFormData({
-                              ...formData,
-                              price: { ...formData.price, ranges: newRanges },
-                            });
-                          }}
-                        />
+                          onValueChange={(value) => updateComplementaryRange(index, 'end', value)}
+                          disabled={index === 1}
+                        >
+                          <SelectTrigger className="w-20">
+                            <SelectValue placeholder="End" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Array.from({ length: 24 }, (_, i) => {
+                              const hour = i.toString().padStart(2, '0');
+                              return (
+                                <SelectItem key={`${hour}:00`} value={`${hour}:00`}>
+                                  {hour}:00
+                                </SelectItem>
+                              );
+                            })}
+                          </SelectContent>
+                        </Select>
                       </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-700 mb-1 block">
-                          Price per Hour (₹)
-                        </label>
+                      <div className="flex-1">
                         <Input
                           type="number"
                           value={range.perHour}
@@ -451,11 +566,103 @@ export default function AdminGrounds() {
                               price: { ...formData.price, ranges: newRanges },
                             });
                           }}
+                          placeholder="Price per Hour (₹)"
                           min="0"
+                          className="w-40"
                         />
                       </div>
                     </div>
                   ))}
+                  <div className="mt-4">
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">
+                      Discount (%)
+                    </label>
+                    <Input
+                      type="number"
+                      value={formData.price?.discount || 0}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          price: {
+                            ...formData.price,
+                            discount: Number(e.target.value),
+                          },
+                        })
+                      }
+                      placeholder="Discount percentage"
+                      min="0"
+                      max="100"
+                      className="w-32"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Images */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Ground Images</h3>
+                <div className="grid grid-cols-1 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">
+                      Primary Image URL *
+                    </label>
+                    <Input
+                      value={formData.images?.[0]?.url || ""}
+                      onChange={(e) => {
+                        const newImages = [...(formData.images || [])];
+                        newImages[0] = {
+                          url: e.target.value,
+                          alt: formData.name || "Ground Image",
+                          isPrimary: true,
+                        };
+                        setFormData({ ...formData, images: newImages });
+                      }}
+                      placeholder="Enter primary image URL"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">
+                      Second Image URL
+                    </label>
+                    <Input
+                      value={formData.images?.[1]?.url || ""}
+                      onChange={(e) => {
+                        const newImages = [...(formData.images || [])];
+                        if (newImages.length < 2) newImages.push({ url: "", alt: "", isPrimary: false });
+                        newImages[1] = {
+                          url: e.target.value,
+                          alt: formData.name ? `${formData.name} - View 2` : "Ground Image 2",
+                          isPrimary: false,
+                        };
+                        setFormData({ ...formData, images: newImages });
+                      }}
+                      placeholder="Enter second image URL"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">
+                      Third Image URL
+                    </label>
+                    <Input
+                      value={formData.images?.[2]?.url || ""}
+                      onChange={(e) => {
+                        const newImages = [...(formData.images || [])];
+                        if (newImages.length < 3) {
+                          while (newImages.length < 3) {
+                            newImages.push({ url: "", alt: "", isPrimary: false });
+                          }
+                        }
+                        newImages[2] = {
+                          url: e.target.value,
+                          alt: formData.name ? `${formData.name} - View 3` : "Ground Image 3",
+                          isPrimary: false,
+                        };
+                        setFormData({ ...formData, images: newImages });
+                      }}
+                      placeholder="Enter third image URL"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -556,6 +763,43 @@ export default function AdminGrounds() {
                       }
                     />
                   </div>
+                </div>
+              </div>
+
+              {/* Amenities */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Amenities</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {[
+                    "Floodlights",
+                    "AC Changing Room",
+                    "Parking",
+                    "Washroom",
+                    "Cafeteria",
+                    "Equipment Rental",
+                    "Scoreboard",
+                    "First Aid",
+                    "Drinking Water"
+                  ].map((amenity) => (
+                    <div key={amenity} className="flex items-center justify-between">
+                      <label className="text-sm font-medium text-gray-700">
+                        {amenity}
+                      </label>
+                      <Switch
+                        checked={formData.amenities?.includes(amenity) || false}
+                        onCheckedChange={(checked) => {
+                          const currentAmenities = formData.amenities || [];
+                          const newAmenities = checked
+                            ? [...currentAmenities, amenity]
+                            : currentAmenities.filter(a => a !== amenity);
+                          setFormData({
+                            ...formData,
+                            amenities: newAmenities,
+                          });
+                        }}
+                      />
+                    </div>
+                  ))}
                 </div>
               </div>
 

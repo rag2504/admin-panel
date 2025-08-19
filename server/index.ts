@@ -35,16 +35,16 @@ const userSchema = new mongoose.Schema(
 
 const groundSchema = new mongoose.Schema(
   {
-    name: { type: String, required: true },
-    description: { type: String },
+    name: { type: String, required: true, trim: true },
+    description: { type: String, required: true },
     location: {
-      address: String,
-      cityId: String,
-      cityName: String,
-      state: String,
-      latitude: Number,
-      longitude: Number,
-      pincode: String,
+      address: { type: String, required: true },
+      cityId: { type: String, required: true },
+      cityName: { type: String, required: true },
+      state: { type: String, required: true },
+      latitude: { type: Number, required: true },
+      longitude: { type: Number, required: true },
+      pincode: { type: String, required: true },
     },
     price: {
       perHour: Number,
@@ -76,24 +76,55 @@ const groundSchema = new mongoose.Schema(
       cafeteria: Boolean,
       equipment: Boolean,
     },
+    availability: {
+      timeSlots: [String],
+      blockedDates: [Date],
+      weeklySchedule: {
+        monday: { isOpen: Boolean, slots: [String] },
+        tuesday: { isOpen: Boolean, slots: [String] },
+        wednesday: { isOpen: Boolean, slots: [String] },
+        thursday: { isOpen: Boolean, slots: [String] },
+        friday: { isOpen: Boolean, slots: [String] },
+        saturday: { isOpen: Boolean, slots: [String] },
+        sunday: { isOpen: Boolean, slots: [String] },
+      },
+    },
     owner: {
-      userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-      name: String,
-      contact: String,
-      email: String,
+      userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+      name: { type: String, required: true },
+      contact: { type: String, required: true },
+      email: { type: String, required: true },
       verified: { type: Boolean, default: false },
     },
     rating: {
-      average: { type: Number, default: 0 },
+      average: { type: Number, default: 0, min: 0, max: 5 },
       count: { type: Number, default: 0 },
-      reviews: [],
+      reviews: [
+        {
+          userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+          rating: { type: Number, required: true, min: 1, max: 5 },
+          comment: String,
+          createdAt: { type: Date, default: Date.now },
+        },
+      ],
     },
     status: {
       type: String,
-      enum: ["active", "inactive", "pending"],
-      default: "pending",
+      enum: ["active", "inactive", "pending", "suspended"],
+      default: "active",
     },
-    isVerified: { type: Boolean, default: false },
+    totalBookings: { type: Number, default: 0 },
+    isVerified: { type: Boolean, default: true },
+    verificationDocuments: {
+      groundLicense: String,
+      ownershipProof: String,
+      identityProof: String,
+    },
+    policies: {
+      cancellation: String,
+      rules: [String],
+      advanceBooking: { type: Number, default: 30 },
+    },
   },
   { timestamps: true },
 );
@@ -512,6 +543,74 @@ export function createServer() {
     }
   });
 
+  // Public Grounds Endpoint (for users)
+  app.get("/api/grounds", async (req, res) => {
+    try {
+      const { city, search, limit = 20, page = 1 } = req.query;
+
+      const query: any = { status: "active" };
+
+      if (city) {
+        query["location.cityId"] = city;
+      }
+
+      if (search) {
+        query.$or = [
+          { name: { $regex: search, $options: "i" } },
+          { description: { $regex: search, $options: "i" } },
+          { "location.address": { $regex: search, $options: "i" } },
+        ];
+      }
+
+      const grounds = await Ground.find(query)
+        .select("-owner.password") // Exclude sensitive owner data
+        .sort({ createdAt: -1 })
+        .limit(Number(limit))
+        .skip((Number(page) - 1) * Number(limit));
+
+      const total = await Ground.countDocuments(query);
+
+      res.json({
+        success: true,
+        grounds,
+        pagination: {
+          page: Number(page),
+          limit: Number(limit),
+          total,
+          pages: Math.ceil(total / Number(limit))
+        }
+      });
+    } catch (error) {
+      console.error("Public grounds fetch error:", error);
+      res
+        .status(500)
+        .json({ success: false, message: "Failed to fetch grounds" });
+    }
+  });
+
+  // Get single ground by ID (public)
+  app.get("/api/grounds/:id", async (req, res) => {
+    try {
+      const ground = await Ground.findOne({
+        _id: req.params.id,
+        status: "active"
+      }).select("-owner.password");
+
+      if (!ground) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Ground not found" });
+      }
+
+      res.json({ success: true, ground });
+    } catch (error) {
+      console.error("Ground fetch error:", error);
+      res
+        .status(500)
+        .json({ success: false, message: "Failed to fetch ground" });
+    }
+  });
+
   // Grounds Management
   app.get("/api/admin/grounds", adminAuth, async (req, res) => {
     try {
@@ -529,14 +628,114 @@ export function createServer() {
 
   app.post("/api/admin/grounds", adminAuth, async (req, res) => {
     try {
-      const ground = new Ground(req.body);
+      // Find or create owner user
+      let ownerUser;
+      const { owner } = req.body;
+
+      if (owner && owner.email) {
+        // Try to find existing user by email
+        ownerUser = await User.findOne({ email: owner.email });
+
+        if (!ownerUser) {
+          // Create new user if not found
+          const hashedPassword = await bcrypt.hash('defaultpassword123', 10);
+          ownerUser = new User({
+            name: owner.name || 'Ground Owner',
+            email: owner.email,
+            phone: owner.contact || '0000000000',
+            password: hashedPassword,
+            role: 'ground_owner',
+            isVerified: true
+          });
+          await ownerUser.save();
+        }
+      } else {
+        // Create a default admin user if no owner provided
+        const hashedPassword = await bcrypt.hash('defaultpassword123', 10);
+        ownerUser = new User({
+          name: 'Admin User',
+          email: 'admin@boxcricket.com',
+          phone: '9999999999',
+          password: hashedPassword,
+          role: 'ground_owner',
+          isVerified: true
+        });
+        await ownerUser.save();
+      }
+
+      // Get location coordinates from cityId
+      let locationData = req.body.location;
+      if (locationData && locationData.cityId) {
+        const city = await Location.findOne({ id: locationData.cityId });
+        if (city) {
+          locationData = {
+            ...locationData,
+            cityName: city.name,
+            state: city.state,
+            latitude: city.latitude,
+            longitude: city.longitude
+          };
+        } else {
+          return res.status(400).json({ success: false, message: 'Invalid cityId provided' });
+        }
+      } else {
+        return res.status(400).json({ success: false, message: 'Location with cityId is required' });
+      }
+
+      // Prepare ground data with proper owner and defaults
+      const groundData = {
+        ...req.body,
+        // Use the updated location data with coordinates
+        location: locationData,
+        // Ensure proper owner object with userId
+        owner: {
+          userId: ownerUser._id,
+          name: owner?.name || ownerUser.name,
+          contact: owner?.contact || ownerUser.phone,
+          email: owner?.email || ownerUser.email,
+          verified: true
+        },
+        // Default availability schedule
+        availability: req.body.availability || {
+          timeSlots: ["06:00-07:00","07:00-08:00","08:00-09:00","09:00-10:00","10:00-11:00","11:00-12:00","12:00-13:00","13:00-14:00","14:00-15:00","15:00-16:00","16:00-17:00","17:00-18:00","18:00-19:00","19:00-20:00","20:00-21:00","21:00-22:00"],
+          blockedDates: [],
+          weeklySchedule: {
+            monday: { isOpen: true, slots: ["06:00-07:00","07:00-08:00","08:00-09:00","09:00-10:00","10:00-11:00","11:00-12:00","12:00-13:00","13:00-14:00","14:00-15:00","15:00-16:00","16:00-17:00","17:00-18:00","18:00-19:00","19:00-20:00","20:00-21:00","21:00-22:00"] },
+            tuesday: { isOpen: true, slots: ["06:00-07:00","07:00-08:00","08:00-09:00","09:00-10:00","10:00-11:00","11:00-12:00","12:00-13:00","13:00-14:00","14:00-15:00","15:00-16:00","16:00-17:00","17:00-18:00","18:00-19:00","19:00-20:00","20:00-21:00","21:00-22:00"] },
+            wednesday: { isOpen: true, slots: ["06:00-07:00","07:00-08:00","08:00-09:00","09:00-10:00","10:00-11:00","11:00-12:00","12:00-13:00","13:00-14:00","14:00-15:00","15:00-16:00","16:00-17:00","17:00-18:00","18:00-19:00","19:00-20:00","20:00-21:00","21:00-22:00"] },
+            thursday: { isOpen: true, slots: ["06:00-07:00","07:00-08:00","08:00-09:00","09:00-10:00","10:00-11:00","11:00-12:00","12:00-13:00","13:00-14:00","14:00-15:00","15:00-16:00","16:00-17:00","17:00-18:00","18:00-19:00","19:00-20:00","20:00-21:00","21:00-22:00"] },
+            friday: { isOpen: true, slots: ["06:00-07:00","07:00-08:00","08:00-09:00","09:00-10:00","10:00-11:00","11:00-12:00","12:00-13:00","13:00-14:00","14:00-15:00","15:00-16:00","16:00-17:00","17:00-18:00","18:00-19:00","19:00-20:00","20:00-21:00","21:00-22:00"] },
+            saturday: { isOpen: true, slots: ["06:00-07:00","07:00-08:00","08:00-09:00","09:00-10:00","10:00-11:00","11:00-12:00","12:00-13:00","13:00-14:00","14:00-15:00","15:00-16:00","16:00-17:00","17:00-18:00","18:00-19:00","19:00-20:00","20:00-21:00","21:00-22:00"] },
+            sunday: { isOpen: true, slots: ["06:00-07:00","07:00-08:00","08:00-09:00","09:00-10:00","10:00-11:00","11:00-12:00","12:00-13:00","13:00-14:00","14:00-15:00","15:00-16:00","16:00-17:00","17:00-18:00","18:00-19:00","19:00-20:00","20:00-21:00","21:00-22:00"] }
+          }
+        },
+        // Ensure these critical fields are set for visibility in public API
+        status: 'active',
+        isVerified: true,
+        totalBookings: 0,
+        policies: req.body.policies || {
+          cancellation: "Free cancellation up to 24 hours before booking",
+          rules: [],
+          advanceBooking: 30
+        },
+        // Ensure amenities is an array
+        amenities: req.body.amenities || [],
+        // Default rating if not provided
+        rating: req.body.rating || {
+          average: 4.5,
+          count: 50,
+          reviews: []
+        }
+      };
+
+      const ground = new Ground(groundData);
       await ground.save();
       res.json({ success: true, ground });
     } catch (error) {
       console.error("Ground creation error:", error);
       res
         .status(500)
-        .json({ success: false, message: "Failed to create ground" });
+        .json({ success: false, message: "Failed to create ground", error: (error as Error).message });
     }
   });
 
