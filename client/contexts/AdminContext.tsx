@@ -14,6 +14,7 @@ interface AdminContextType {
   logout: () => void;
   isAuthenticated: boolean;
   loading: boolean;
+  apiCall: (endpoint: string, options?: RequestInit) => Promise<any>;
 }
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
@@ -55,6 +56,46 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem("adminUser");
   };
 
+  const apiCall = async (endpoint: string, options: RequestInit = {}) => {
+    // Use the main server URL for API calls (port 3001)
+    const baseURL = 'http://localhost:3001';
+    const url = endpoint.startsWith('http') ? endpoint : `${baseURL}${endpoint}`;
+    
+    const headers = {
+      'Content-Type': 'application/json',
+      ...(token && { 'Authorization': `Bearer ${token}` }),
+      ...options.headers,
+    };
+
+    console.log("🌐 API Call:", url, { headers, ...options });
+
+    try {
+      const response = await fetch(url, {
+        ...options,
+        headers,
+      });
+
+      let data: any = null;
+      try {
+        data = await response.json();
+      } catch (_e) {
+        data = { success: false, message: 'Empty response' };
+      }
+      console.log("📝 API Response:", response.status, data);
+
+      // Do NOT auto-logout on 401 here; let callers decide how to handle
+      // Return a structured error response instead
+      if (!response.ok) {
+        return { success: false, status: response.status, ...data };
+      }
+
+      return data;
+    } catch (error) {
+      console.error("❌ API Error:", error);
+      throw error;
+    }
+  };
+
   const value = {
     user,
     token,
@@ -62,6 +103,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     logout,
     isAuthenticated: !!token && !!user,
     loading,
+    apiCall,
   };
 
   return (

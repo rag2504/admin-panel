@@ -193,17 +193,55 @@ const locationSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+const notificationSchema = new mongoose.Schema(
+  {
+    title: { type: String, required: true },
+    message: { type: String, required: true },
+    type: {
+      type: String,
+      enum: ["offer", "booking", "general", "system"],
+      default: "general",
+    },
+    recipients: {
+      type: String,
+      enum: ["all", "specific"],
+      default: "all",
+    },
+    specificUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    isRead: [{
+      userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      readAt: { type: Date, default: Date.now }
+    }],
+    createdBy: {
+      type: mongoose.Schema.Types.Mixed, // Allow both ObjectId and string
+      required: true,
+    },
+    isActive: { type: Boolean, default: true },
+    priority: {
+      type: String,
+      enum: ["low", "medium", "high"],
+      default: "medium",
+    },
+    expiresAt: { type: Date },
+  },
+  { timestamps: true },
+);
+
 // Models
 const User = mongoose.model("User", userSchema);
 const Ground = mongoose.model("Ground", groundSchema);
 const Booking = mongoose.model("Booking", bookingSchema);
 const Location = mongoose.model("Location", locationSchema);
+const Notification = mongoose.model("Notification", notificationSchema);
 
 // Export createServer function for Vite integration
 export function createServer() {
   const app = express();
 
-  app.use(cors());
+  app.use(cors({
+    origin: ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:8080'],
+    credentials: true
+  }));
   app.use(express.json());
 
   // Admin Auth Middleware
@@ -844,6 +882,10 @@ export function createServer() {
 
   app.patch("/api/admin/bookings/:id", adminAuth, async (req, res) => {
     try {
+      const oldBooking = await Booking.findById(req.params.id)
+        .populate("userId", "name email")
+        .populate("groundId", "name");
+      
       const booking = await Booking.findByIdAndUpdate(req.params.id, req.body, {
         new: true,
       })
@@ -854,6 +896,18 @@ export function createServer() {
         return res
           .status(404)
           .json({ success: false, message: "Booking not found" });
+      }
+
+      // Create notification if status changed to confirmed
+      if (oldBooking && oldBooking.status !== 'confirmed' && booking.status === 'confirmed') {
+        console.log(`🔄 Booking status changed from ${oldBooking.status} to confirmed, creating notification...`);
+        await createBookingNotification(booking, 'confirmed');
+      }
+      
+      // Create notification if status changed to cancelled
+      if (oldBooking && oldBooking.status !== 'cancelled' && booking.status === 'cancelled') {
+        console.log(`🔄 Booking status changed from ${oldBooking.status} to cancelled, creating notification...`);
+        await createBookingNotification(booking, 'cancelled');
       }
 
       res.json({ success: true, booking });
@@ -945,6 +999,361 @@ export function createServer() {
         .json({ success: false, message: "Failed to delete location" });
     }
   });
+
+  // Notifications Management
+  app.get("/api/admin/notifications", adminAuth, async (req, res) => {
+    try {
+      const notifications = await Notification.find()
+        .populate({
+          path: "createdBy",
+          select: "name email",
+          match: { _id: { $exists: true } } // Only populate if it's an ObjectId
+        })
+        .populate("specificUsers", "name email")
+        .sort({ createdAt: -1 });
+      res.json({ success: true, notifications });
+    } catch (error) {
+      console.error("Notifications fetch error:", error);
+      res
+        .status(500)
+        .json({ success: false, message: "Failed to fetch notifications" });
+    }
+  });
+
+  app.post("/api/admin/notifications", adminAuth, async (req, res) => {
+    try {
+      const { title, message, type, recipients, specificUsers, priority, expiresAt } = req.body;
+      
+      const notification = new Notification({
+        title,
+        message,
+        type,
+        recipients,
+        specificUsers: recipients === "specific" ? specificUsers : [],
+        createdBy: req.admin.id || "67890123456789012345678901", // Default admin ObjectId
+        priority,
+        expiresAt: expiresAt ? new Date(expiresAt) : null,
+      });
+      
+      await notification.save();
+      try {
+        await notification.populate({
+          path: "createdBy",
+          select: "name email",
+          match: { _id: { $exists: true } }
+        });
+      } catch (error) {
+        // Ignore populate error for string createdBy
+        console.log("Note: createdBy is not an ObjectId, skipping populate");
+      }
+      
+      res.json({ success: true, notification });
+    } catch (error) {
+      console.error("Notification creation error:", error);
+      res
+        .status(500)
+        .json({ success: false, message: "Failed to create notification" });
+    }
+  });
+
+  app.delete("/api/admin/notifications/:id", adminAuth, async (req, res) => {
+    try {
+      const notification = await Notification.findByIdAndDelete(req.params.id);
+      if (!notification) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Notification not found" });
+      }
+      res.json({ success: true, message: "Notification deleted successfully" });
+    } catch (error) {
+      console.error("Notification deletion error:", error);
+      res
+        .status(500)
+        .json({ success: false, message: "Failed to delete notification" });
+    }
+  });
+
+  // User Notification Endpoints
+  app.get("/api/notifications/:userId", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      console.log("📱 Fetching notifications for user ID:", userId);
+      
+      // First, let's check if there are any notifications at all
+      const totalNotifications = await Notification.countDocuments();
+      console.log("📊 Total notifications in database:", totalNotifications);
+      
+      if (totalNotifications === 0) {
+        console.log("⚠️ No notifications exist in database");
+        return res.json({ success: true, notifications: [], message: "No notifications exist yet" });
+      }
+      
+      // Try to find notifications for this user
+      const query = {
+        $and: [
+          {
+            $or: [
+              { recipients: "all" },
+              { recipients: "specific", specificUsers: userId }
+            ]
+          },
+          { isActive: true },
+          {
+            $or: [
+              { expiresAt: { $exists: false } },
+              { expiresAt: null },
+              { expiresAt: { $gte: new Date() } }
+            ]
+          }
+        ]
+      };
+      
+      console.log("🔍 Notification query:", JSON.stringify(query, null, 2));
+      
+      const notifications = await Notification.find(query)
+        .sort({ createdAt: -1 })
+        .limit(50);
+      
+      console.log("📝 Found", notifications.length, "notifications for user");
+      
+      // Add read status for each notification
+      const notificationsWithReadStatus = notifications.map(notification => {
+        const isReadByUser = notification.isRead.some(read => read.userId.toString() === userId);
+        const result = {
+          ...notification.toObject(),
+          isReadByUser
+        };
+        console.log("📝 Notification:", notification.title, "| Read:", isReadByUser);
+        return result;
+      });
+      
+      res.json({ 
+        success: true, 
+        notifications: notificationsWithReadStatus,
+        debug: {
+          userId,
+          totalInDb: totalNotifications,
+          foundForUser: notifications.length,
+          query
+        }
+      });
+    } catch (error) {
+      console.error("❌ User notifications fetch error:", error);
+      console.error("❌ Error stack:", error.stack);
+      res
+        .status(500)
+        .json({ 
+          success: false, 
+          message: "Failed to fetch notifications",
+          error: error.message 
+        });
+    }
+  });
+
+  app.post("/api/notifications/:notificationId/read/:userId", async (req, res) => {
+    try {
+      const { notificationId, userId } = req.params;
+      
+      const notification = await Notification.findById(notificationId);
+      if (!notification) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Notification not found" });
+      }
+      
+      // Check if already read by user
+      const alreadyRead = notification.isRead.some(read => read.userId.toString() === userId);
+      
+      if (!alreadyRead) {
+        notification.isRead.push({ userId, readAt: new Date() });
+        await notification.save();
+      }
+      
+      res.json({ success: true, message: "Notification marked as read" });
+    } catch (error) {
+      console.error("Mark notification read error:", error);
+      res
+        .status(500)
+        .json({ success: false, message: "Failed to mark notification as read" });
+    }
+  });
+
+  // Simple test notification endpoint (no auth required for testing)
+  app.post("/api/simple-test-notification", async (req, res) => {
+    try {
+      console.log("📨 Creating simple test notification...");
+      
+      const notification = new Notification({
+        title: "Simple Test Notification 🎆",
+        message: "This is a simple test notification created without authentication!",
+        type: "general",
+        recipients: "all",
+        specificUsers: [],
+        createdBy: "67890123456789012345678901",
+        priority: "medium",
+        isActive: true,
+      });
+      
+      await notification.save();
+      console.log("✅ Simple test notification created successfully!");
+      
+      res.json({ 
+        success: true, 
+        message: "Simple test notification created successfully!", 
+        notification: {
+          _id: notification._id,
+          title: notification.title,
+          message: notification.message,
+          type: notification.type
+        }
+      });
+    } catch (error) {
+      console.error("❌ Simple test notification error:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to create simple test notification",
+        error: error.message 
+      });
+    }
+  });
+
+  // Create test notification for all users (no auth required)
+  app.post("/api/create-test-for-all", async (req, res) => {
+    try {
+      console.log("📢 Creating test notification for ALL users...");
+      
+      const notification = new Notification({
+        title: "Test for Everyone! 🎉",
+        message: "This notification should appear for all users. Created at " + new Date().toLocaleString(),
+        type: "general",
+        recipients: "all",  // This is key - should target ALL users
+        specificUsers: [],
+        createdBy: "67890123456789012345678901",
+        priority: "medium",
+        isActive: true,
+      });
+      
+      await notification.save();
+      console.log("✅ Test notification for all users created successfully!");
+      console.log("📝 Notification details:", {
+        _id: notification._id,
+        title: notification.title,
+        recipients: notification.recipients,
+        type: notification.type
+      });
+      
+      res.json({ 
+        success: true, 
+        message: "Test notification for all users created!", 
+        notification: {
+          _id: notification._id,
+          title: notification.title,
+          message: notification.message,
+          type: notification.type,
+          recipients: notification.recipients
+        }
+      });
+    } catch (error) {
+      console.error("❌ Test notification creation error:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to create test notification",
+        error: error.message 
+      });
+    }
+  });
+
+  // Test notification endpoint
+  app.post("/api/test-notification", async (req, res) => {
+    try {
+      const { userId } = req.body;
+      
+      if (!userId) {
+        return res.status(400).json({ success: false, message: "User ID required" });
+      }
+      
+      const notification = new Notification({
+        title: "Test Notification 🎉",
+        message: "This is a test notification to verify the system is working properly!",
+        type: "general",
+        recipients: "specific",
+        specificUsers: [userId],
+        createdBy: "67890123456789012345678901",
+        priority: "medium",
+      });
+      
+      await notification.save();
+      console.log(`📨 Test notification created for user ${userId}`);
+      
+      res.json({ success: true, message: "Test notification sent successfully", notification });
+    } catch (error) {
+      console.error("Test notification error:", error);
+      res.status(500).json({ success: false, message: "Failed to send test notification" });
+    }
+  });
+
+  // Debug endpoint to check notifications in database
+  app.get("/api/debug/notifications", async (req, res) => {
+    try {
+      const notifications = await Notification.find().sort({ createdAt: -1 }).limit(10);
+      const count = await Notification.countDocuments();
+      
+      console.log("🔍 Debug: Found", count, "total notifications");
+      
+      res.json({
+        success: true,
+        total: count,
+        notifications: notifications.map(n => ({
+          _id: n._id,
+          title: n.title,
+          message: n.message,
+          type: n.type,
+          recipients: n.recipients,
+          isActive: n.isActive,
+          createdAt: n.createdAt
+        }))
+      });
+    } catch (error) {
+      console.error("❌ Debug notifications error:", error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
+  // Helper function to create automatic notifications
+  const createBookingNotification = async (booking: any, type: string) => {
+    try {
+      let title = "";
+      let message = "";
+      
+      switch (type) {
+        case "confirmed":
+          title = "Booking Confirmed! 🎉";
+          message = `Your booking for ${booking.groundId?.name || 'the ground'} on ${new Date(booking.bookingDate).toLocaleDateString()} has been confirmed. Booking ID: ${booking.bookingId}`;
+          break;
+        case "cancelled":
+          title = "Booking Cancelled";
+          message = `Your booking for ${booking.groundId?.name || 'the ground'} on ${new Date(booking.bookingDate).toLocaleDateString()} has been cancelled. Booking ID: ${booking.bookingId}`;
+          break;
+      }
+      
+      if (title && message && booking.userId) {
+        const notification = new Notification({
+          title,
+          message,
+          type: "booking",
+          recipients: "specific",
+          specificUsers: [booking.userId],
+          createdBy: "67890123456789012345678901", // System admin ObjectId
+          priority: "high",
+        });
+        
+        await notification.save();
+        console.log(`📱 Booking notification created for user ${booking.userId}`);
+      }
+    } catch (error) {
+      console.error("Error creating booking notification:", error);
+    }
+  };
 
   return app;
 }

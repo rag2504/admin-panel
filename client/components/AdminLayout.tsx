@@ -14,6 +14,7 @@ import {
   Shield,
   Menu,
   X,
+  Bell,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -26,6 +27,7 @@ const navigation = [
   { name: "Users", href: "/admin/users", icon: Users },
   { name: "Grounds", href: "/admin/grounds", icon: MapPin },
   { name: "Bookings", href: "/admin/bookings", icon: Calendar },
+  { name: "Notifications", href: "/admin/notifications", icon: Bell },
   { name: "Financial", href: "/admin/financial", icon: IndianRupee },
   { name: "Locations", href: "/admin/locations", icon: Settings },
 ];

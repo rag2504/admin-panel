@@ -20,6 +20,7 @@ import AdminGrounds from "./pages/AdminGrounds";
 import AdminFinancial from "./pages/AdminFinancial";
 import AdminLocations from "./pages/AdminLocations";
 import AdminBookings from "./pages/AdminBookings";
+import AdminNotifications from "./pages/AdminNotifications";
 
 const queryClient = new QueryClient();
 
@@ -92,6 +93,14 @@ function AdminRoutes() {
         element={
           <ProtectedAdminRoute>
             <AdminBookings />
+          </ProtectedAdminRoute>
+        }
+      />
+      <Route
+        path="/notifications"
+        element={
+          <ProtectedAdminRoute>
+            <AdminNotifications />
           </ProtectedAdminRoute>
         }
       />
