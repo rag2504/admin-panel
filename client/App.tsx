@@ -21,6 +21,7 @@ import AdminFinancial from "./pages/AdminFinancial";
 import AdminLocations from "./pages/AdminLocations";
 import AdminBookings from "./pages/AdminBookings";
 import AdminNotifications from "./pages/AdminNotifications";
+import AdminLiveChat from "./pages/AdminLiveChat";
 
 const queryClient = new QueryClient();
 
@@ -101,6 +102,14 @@ function AdminRoutes() {
         element={
           <ProtectedAdminRoute>
             <AdminNotifications />
+          </ProtectedAdminRoute>
+        }
+      />
+      <Route
+        path="/live-chat"
+        element={
+          <ProtectedAdminRoute>
+            <AdminLiveChat />
           </ProtectedAdminRoute>
         }
       />

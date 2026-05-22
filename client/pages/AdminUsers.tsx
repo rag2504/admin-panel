@@ -19,6 +19,13 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { useApi } from "@/hooks/useApi";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Search,
   Users,
   UserCheck,
@@ -31,6 +38,8 @@ import {
   Trash2,
   Shield,
   ShieldOff,
+  Eye,
+  Clock,
 } from "lucide-react";
 
 interface User {
@@ -63,7 +72,12 @@ export default function AdminUsers() {
     total: 0,
     pages: 0,
   });
-  const { get, patch } = useApi();
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [userBookings, setUserBookings] = useState<any[]>([]);
+  const [loadingBookings, setLoadingBookings] = useState(false);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  
+  const { get, patch, delete: del } = useApi();
 
   useEffect(() => {
     loadUsers();
@@ -137,6 +151,48 @@ export default function AdminUsers() {
     }
 
     await updateUserStatus(userId, "isActive", !currentStatus);
+  };
+
+  const handleViewDetails = async (user: User) => {
+    setSelectedUser(user);
+    setIsDetailsOpen(true);
+    setLoadingBookings(true);
+    setUserBookings([]);
+    try {
+      const response = await get("/admin/bookings");
+      if (response.success) {
+        const bookings = response.data.bookings || [];
+        const filtered = bookings.filter((b: any) => b.userId?._id === user._id || b.userId === user._id);
+        setUserBookings(filtered);
+      }
+    } catch (error) {
+      console.error("Failed to load user bookings:", error);
+    } finally {
+      setLoadingBookings(false);
+    }
+  };
+
+  const handleDeleteUserFromModal = async () => {
+    if (!selectedUser) return;
+    await deleteUser(selectedUser._id, selectedUser.name);
+    setIsDetailsOpen(false);
+    setSelectedUser(null);
+  };
+
+  const handleBlockToggleFromModal = async () => {
+    if (!selectedUser) return;
+    await blockUser(selectedUser._id, selectedUser.isActive);
+    setSelectedUser(prev => prev ? { ...prev, isActive: !prev.isActive } : null);
+    // Reload users list to keep list in sync
+    loadUsers();
+  };
+
+  const handleVerifyToggleFromModal = async (checked: boolean) => {
+    if (!selectedUser) return;
+    await updateUserStatus(selectedUser._id, "isVerified", checked);
+    setSelectedUser(prev => prev ? { ...prev, isVerified: checked } : null);
+    // Reload users list to keep list in sync
+    loadUsers();
   };
 
   const formatDate = (date: string) => {
@@ -305,7 +361,10 @@ export default function AdminUsers() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                        <h3 className="font-semibold text-gray-900 truncate">
+                        <h3 
+                          className="font-semibold text-gray-900 truncate cursor-pointer hover:text-blue-600 hover:underline"
+                          onClick={() => handleViewDetails(user)}
+                        >
                           {user.name}
                         </h3>
                         {getStatusBadge(user)}
@@ -355,6 +414,16 @@ export default function AdminUsers() {
                     </div>
 
                     <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleViewDetails(user)}
+                        className="text-blue-600 hover:text-blue-700"
+                      >
+                        <Eye className="h-4 w-4 sm:mr-1" />
+                        <span className="hidden sm:inline">Details</span>
+                      </Button>
+
                       <Button
                         variant="outline"
                         size="sm"
@@ -440,6 +509,185 @@ export default function AdminUsers() {
           </CardContent>
         </Card>
       )}
+
+      {/* User Details Modal */}
+      <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold flex items-center gap-2">
+              <Users className="h-5 w-5 text-blue-600" />
+              User Profile Details
+            </DialogTitle>
+          </DialogHeader>
+
+          {selectedUser && (
+            <div className="space-y-6">
+              {/* Profile Overview Card */}
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold text-2xl">
+                    {selectedUser.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-bold text-gray-900">{selectedUser.name}</h2>
+                    <p className="text-sm text-gray-500">{selectedUser.email}</p>
+                    <div className="flex items-center gap-2 mt-2">
+                      {getStatusBadge(selectedUser)}
+                      <Badge variant="outline" className="capitalize text-xs">
+                        {selectedUser.role.replace("_", " ")}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-2 w-full md:w-auto">
+                  <div className="flex items-center gap-2 mr-4">
+                    <span className="text-xs font-medium text-gray-600">Verified:</span>
+                    <Switch
+                      checked={selectedUser.isVerified}
+                      onCheckedChange={handleVerifyToggleFromModal}
+                    />
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleBlockToggleFromModal}
+                    className={
+                      selectedUser.isActive
+                        ? "text-orange-600 hover:text-orange-700"
+                        : "text-green-600 hover:text-green-700"
+                    }
+                  >
+                    {selectedUser.isActive ? (
+                      <>
+                        <ShieldOff className="h-4 w-4 mr-1" />
+                        Block
+                      </>
+                    ) : (
+                      <>
+                        <Shield className="h-4 w-4 mr-1" />
+                        Unblock
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={handleDeleteUserFromModal}
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    Delete
+                  </Button>
+                </div>
+              </div>
+
+              {/* Profile Details Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-semibold text-gray-500">Contact Information</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2 text-sm">
+                    <div className="flex items-center gap-2">
+                      <Mail className="h-4 w-4 text-gray-400" />
+                      <span>{selectedUser.email}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Phone className="h-4 w-4 text-gray-400" />
+                      <span>{selectedUser.phone || "No phone number listed"}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-semibold text-gray-500">Account Metadata</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2 text-sm">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-gray-400" />
+                      <span>Registered: {formatDate(selectedUser.createdAt)}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-gray-400 text-green-600" />
+                      <span>
+                        Last Login:{" "}
+                        {selectedUser.lastLogin
+                          ? new Intl.DateTimeFormat("en-IN", {
+                              dateStyle: "medium",
+                              timeStyle: "short",
+                            }).format(new Date(selectedUser.lastLogin))
+                          : "Never logged in"}
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Booking History Section */}
+              <div>
+                <h3 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-blue-600" />
+                  Booking History ({userBookings.length})
+                </h3>
+
+                {loadingBookings ? (
+                  <div className="space-y-2">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="h-16 bg-gray-50 rounded-lg animate-pulse" />
+                    ))}
+                  </div>
+                ) : userBookings.length > 0 ? (
+                  <div className="border rounded-lg overflow-hidden bg-white max-h-[300px] overflow-y-auto">
+                    <table className="w-full text-sm text-left">
+                      <thead className="bg-gray-50 text-gray-500 uppercase text-xs">
+                        <tr>
+                          <th className="px-4 py-2">Booking ID</th>
+                          <th className="px-4 py-2">Ground</th>
+                          <th className="px-4 py-2">Date & Time</th>
+                          <th className="px-4 py-2 text-right">Amount</th>
+                          <th className="px-4 py-2 text-center">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y">
+                        {userBookings.map((booking: any) => (
+                          <tr key={booking._id} className="hover:bg-gray-50">
+                            <td className="px-4 py-2 font-mono font-semibold text-xs">{booking.bookingId}</td>
+                            <td className="px-4 py-2">{booking.groundId?.name || "Unknown Ground"}</td>
+                            <td className="px-4 py-2">
+                              {new Intl.DateTimeFormat("en-IN", { dateStyle: "short" }).format(new Date(booking.bookingDate))}
+                              <div className="text-xs text-gray-500">
+                                {booking.timeSlot?.startTime} - {booking.timeSlot?.endTime}
+                              </div>
+                            </td>
+                            <td className="px-4 py-2 text-right font-medium text-emerald-600">
+                              ₹{booking.pricing?.totalAmount || 0}
+                            </td>
+                            <td className="px-4 py-2 text-center">
+                              <Badge className={
+                                booking.status === "confirmed" ? "bg-green-100 text-green-800" :
+                                booking.status === "pending" ? "bg-yellow-100 text-yellow-800" :
+                                booking.status === "cancelled" ? "bg-red-100 text-red-800" :
+                                "bg-blue-100 text-blue-800"
+                              }>
+                                {booking.status}
+                              </Badge>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="text-center py-8 border rounded-lg bg-gray-50 text-gray-400">
+                    No bookings found for this user.
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

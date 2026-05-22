@@ -15,6 +15,7 @@ import {
   Menu,
   X,
   Bell,
+  MessageCircle,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -30,6 +31,7 @@ const navigation = [
   { name: "Notifications", href: "/admin/notifications", icon: Bell },
   { name: "Financial", href: "/admin/financial", icon: IndianRupee },
   { name: "Locations", href: "/admin/locations", icon: Settings },
+  { name: "Live Chat", href: "/admin/live-chat", icon: MessageCircle },
 ];
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
@@ -56,7 +58,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       {/* Sidebar */}
       <div
         className={`
-        fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:inset-0
+        fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-200 ease-in-out
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
       `}
       >
