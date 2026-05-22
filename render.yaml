@@ -2,7 +2,7 @@ services:
   - type: web
     name: boxcricket-api
     env: node
-    buildCommand: pnpm install && pnpm run build:server
+    buildCommand: npm install && npm run build:client && npm run build:server
     startCommand: node dist/server/node-build.mjs
     envVars:
       - key: NODE_ENV
