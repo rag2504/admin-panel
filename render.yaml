@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: boxcricket-api
+    env: node
+    buildCommand: pnpm install && pnpm run build:server
+    startCommand: node dist/server/node-build.mjs
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
