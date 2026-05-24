@@ -66,8 +66,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           {/* Logo */}
           <div className="flex items-center justify-between p-4 border-b">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-600 rounded-lg">
-                <Shield className="h-6 w-6 text-white" />
+              <div className="h-10 w-10 rounded-lg overflow-hidden border border-gray-200 shadow-sm flex-shrink-0">
+                <img src="/newLogo.jpeg" alt="BoxCric Logo" className="h-full w-full object-cover" />
               </div>
               <div>
                 <h1 className="font-bold text-gray-900">BoxCric Admin</h1>

@@ -30,6 +30,8 @@ import {
   ArrowLeft,
   Save,
   X,
+  Check,
+  AlertCircle,
 } from "lucide-react";
 
 interface Ground {
@@ -93,6 +95,7 @@ export default function AdminGrounds() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingGround, setEditingGround] = useState<Ground | null>(null);
+  const [activeTab, setActiveTab] = useState<"all" | "active" | "pending" | "inactive">("all");
   const [formData, setFormData] = useState<Partial<Ground>>({
     name: "",
     description: "",
@@ -134,6 +137,9 @@ export default function AdminGrounds() {
     },
   });
   const { get, post, put, delete: del } = useApi();
+
+  const filteredGrounds = activeTab === "all" ? grounds : grounds.filter(g => g.status === activeTab);
+  const pendingCount = grounds.filter(g => g.status === "pending").length;
 
   useEffect(() => {
     loadGrounds();
@@ -210,6 +216,41 @@ export default function AdminGrounds() {
       }
     } catch (error) {
       console.error("Failed to delete ground:", error);
+    }
+  };
+
+  const handleApprove = async (ground: Ground) => {
+    try {
+      const updatedOwner = ground.owner ? { ...ground.owner, verified: true } : undefined;
+      const response = await put(`/admin/grounds/${ground._id}`, {
+        ...ground,
+        status: "active",
+        isVerified: true,
+        owner: updatedOwner
+      });
+      if (response.success) {
+        loadGrounds();
+      }
+    } catch (error) {
+      console.error("Failed to approve ground:", error);
+    }
+  };
+
+  const handleReject = async (ground: Ground) => {
+    if (!confirm("Are you sure you want to reject this ground request?")) return;
+    try {
+      const updatedOwner = ground.owner ? { ...ground.owner, verified: false } : undefined;
+      const response = await put(`/admin/grounds/${ground._id}`, {
+        ...ground,
+        status: "inactive",
+        isVerified: false,
+        owner: updatedOwner
+      });
+      if (response.success) {
+        loadGrounds();
+      }
+    } catch (error) {
+      console.error("Failed to reject ground:", error);
     }
   };
 
@@ -1040,7 +1081,28 @@ export default function AdminGrounds() {
       {/* Grounds List */}
       <Card>
         <CardHeader>
-          <CardTitle>All Grounds ({grounds.length})</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>
+              {activeTab === "all" ? "All" : activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Grounds ({filteredGrounds.length})
+            </CardTitle>
+            <div className="flex items-center gap-2">
+              <Button variant={activeTab === "all" ? "default" : "outline"} size="sm" onClick={() => setActiveTab("all")}>
+                All ({grounds.length})
+              </Button>
+              <Button variant={activeTab === "active" ? "default" : "outline"} size="sm" onClick={() => setActiveTab("active")} className={activeTab === "active" ? "bg-green-600 hover:bg-green-700" : ""}>
+                Active ({grounds.filter(g => g.status === "active").length})
+              </Button>
+              <Button variant={activeTab === "pending" ? "default" : "outline"} size="sm" onClick={() => setActiveTab("pending")} className={activeTab === "pending" ? "bg-yellow-600 hover:bg-yellow-700" : ""}>
+                Pending ({pendingCount})
+                {pendingCount > 0 && activeTab !== "pending" && (
+                  <span className="ml-1 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">{pendingCount}</span>
+                )}
+              </Button>
+              <Button variant={activeTab === "inactive" ? "default" : "outline"} size="sm" onClick={() => setActiveTab("inactive")} className={activeTab === "inactive" ? "bg-red-600 hover:bg-red-700" : ""}>
+                Inactive ({grounds.filter(g => g.status === "inactive").length})
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -1055,9 +1117,9 @@ export default function AdminGrounds() {
                 </div>
               ))}
             </div>
-          ) : grounds.length > 0 ? (
+          ) : filteredGrounds.length > 0 ? (
             <div className="space-y-4">
-              {grounds.map((ground) => (
+              {filteredGrounds.map((ground) => (
                 <div
                   key={ground._id}
                   className="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
@@ -1097,6 +1159,28 @@ export default function AdminGrounds() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
+                      {ground.status === "pending" && (
+                        <>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleApprove(ground)}
+                            className="text-green-600 hover:text-green-700 border-green-300 hover:bg-green-50"
+                          >
+                            <Check className="h-4 w-4 mr-1" />
+                            Approve
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleReject(ground)}
+                            className="text-orange-600 hover:text-orange-700 border-orange-300 hover:bg-orange-50"
+                          >
+                            <AlertCircle className="h-4 w-4 mr-1" />
+                            Reject
+                          </Button>
+                        </>
+                      )}
                       <Button
                         variant="outline"
                         size="sm"

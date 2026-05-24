@@ -55,8 +55,8 @@ export default function AdminLogin() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <div className="p-3 bg-blue-600 rounded-full">
-              <Shield className="h-8 w-8 text-white" />
+            <div className="h-16 w-16 rounded-full overflow-hidden border-2 border-blue-600 p-0.5 shadow-md">
+              <img src="/newLogo.jpeg" alt="BoxCric Logo" className="h-full w-full object-cover rounded-full" />
             </div>
           </div>
           <CardTitle className="text-2xl font-bold text-gray-900">
